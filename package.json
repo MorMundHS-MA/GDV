@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "start": "webpack-dev-server",
     "tsc": "tsc",
+    "build": "webpack --mode=production --config webpack.config.js ",
     "dev": "concurrently --kill-others \"npm run build-watch\" \"npm run dev-server\"",
     "build-watch": "webpack --mode=development --config webpack.config.js --watch",
     "dev-server": "webpack-dev-server --mode=development --hot"
