@@ -44,8 +44,8 @@ const tooltip = d3.select("body").append("div")
 init();
 async function init () {
     let data = joinDataSets(
-        scsv.parse(await d3.text("gdp.csv")),
-        scsv.parse(await d3.text("gini.csv")));
+        scsv.parse(await d3.text("data/gdp.csv")),
+        scsv.parse(await d3.text("data/gini.csv")));
     console.log(data);
     // don't want dots overlapping axis, so add in buffer to data domain
     xScale.domain([d3.min(data, xValue) - 1, d3.max(data, xValue) + 1]);
