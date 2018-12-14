@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@types/d3": "^5.0.1",
+    "@types/node": "^10.12.15",
     "concurrently": "^4.1.0",
     "ts-loader": "^5.3.1",
     "tslint": "^5.11.0",
