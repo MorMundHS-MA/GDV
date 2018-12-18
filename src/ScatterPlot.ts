@@ -52,7 +52,7 @@ export class ScatterPlot {
     async create () : Promise<ScatterPlot> {
         this.data = joinDataSets(
             csv_semicolon.parse(await d3.text("data/gdp.csv")),
-            csv_semicolon.parse(await d3.text("data/gini.csv")));
+            csv_semicolon.parse(await d3.text("data/inequality.csv")));
     
         let xMax = Number.NEGATIVE_INFINITY, xMin = Number.POSITIVE_INFINITY;
         let yMax = Number.NEGATIVE_INFINITY, yMin = Number.POSITIVE_INFINITY;

@@ -1,6 +1,6 @@
 import { DSVRowString, DSVParsedArray } from "d3";
 
-export const years = ['1990', '1995', '2000', '2005', '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017'];
+export const years = ['2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017'];
 
 export function joinDataSets(gdpRaw: DSVParsedArray<DSVRowString>, giniRaw: DSVParsedArray<DSVRowString>): Map<String, DataTuple[]> {
     const result = new Map();
