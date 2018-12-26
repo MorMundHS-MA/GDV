@@ -2,22 +2,39 @@ import { DSVRowString, dsvFormat } from "d3-dsv";
 import { text, json } from "d3-fetch";
 import { ok } from "assert";
 
-export enum years {
-    Y2010 = '2010',
-    Y2011 = '2011',
-    Y2012 = '2012',
-    Y2013 = '2013',
-    Y2014 = '2014',
-    Y2015 = '2015',
-    Y2016 = '2016',
-    Y2017 = '2017'
-};
+export const years = ['2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017'];
 
 export interface Country {
     code: string;
     name: string;
     region: string;
     stats: Map<string, CountryStats>
+}
+
+class StatLimits {
+    [key:string]: Limit;
+    gdp = new Limit();
+    ineq_comb = new Limit();
+    ineq_edu = new Limit();
+    ineq_inc = new Limit();
+    ineq_life = new Limit();
+}
+
+class Limit {
+    min: number = Number.POSITIVE_INFINITY;
+    max: number = Number.NEGATIVE_INFINITY;
+
+    /**
+     * Expands the number limit if the given number is outside of the current limit.
+     * @param newNumber The number to test the limit for.
+     */
+    public expandRange(newNumber: number) {
+        if(!Number.isFinite(newNumber)) {
+            return;
+        }
+        this.min = Math.min(newNumber, this.min);
+        this.max = Math.max(newNumber, this.max);
+    }
 }
 
 export class DataSource {
@@ -36,6 +53,8 @@ export class DataSource {
     ]);
 
     private data = new Map<string, Country>();
+    private dataLimits: StatLimits = new StatLimits();
+
 
     private constructor() {
     }
@@ -66,7 +85,7 @@ export class DataSource {
             // Merge the country info and the statistics and add them to the database
             dataSource.data.set(
                 countryInfo.name,
-                Object.assign(countryInfo, {stats: DataSource.readCountryStats(data, countryCSVName)}));
+                Object.assign(countryInfo, {stats: DataSource.readCountryStats(data, countryCSVName, dataSource.dataLimits)}));
         }
 
         return dataSource;
@@ -76,6 +95,16 @@ export class DataSource {
         return this.data.get(name);
     }
 
+    public getCountries() : Country[] {
+        return Array.from(this.data.values());
+    }
+
+    /**
+     * Returns the value range for the statistics in the data set.
+     */
+    public getStatLimits(): StatLimits {
+        return this.dataLimits;
+    }
 
     private static async csvLoader(resourceID: string, source: string): Promise<[string, Map<string, DSVRowString>]> {
         const countryMappedData = new Map(
@@ -84,18 +113,19 @@ export class DataSource {
         return [resourceID,countryMappedData];
     }
 
-    private static readCountryStats(data: Map<string, Map<String, DSVRowString>>, countryName: string): Map<string, CountryStats> {
+    private static readCountryStats(data: Map<string, Map<string, DSVRowString>>, countryName: string, limits: StatLimits): Map<string, CountryStats> {
         const countryStats = new Map<string, CountryStats>();
         const safeFetchData = (resourceID: string, year: string) => {
             let row = data.get(resourceID).get(countryName);
             if(row === undefined){
                 return null;
             } else {
+                limits[resourceID].expandRange(parseFloat(row[year]));
                 return row[year];
             }
         }
 
-        for (const year in years) {
+        for (const year of years) {
             countryStats.set(year,
                 {
                     gdp: parseInt(safeFetchData("gdp", year)),

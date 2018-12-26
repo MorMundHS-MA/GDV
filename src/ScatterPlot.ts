@@ -1,12 +1,12 @@
 import * as d3 from "d3";
-import { DataTuple, joinDataSets, years } from "./parseHelper";
 import { BaseType } from "d3";
-const csv_semicolon = d3.dsvFormat(';');
+import { DataSource, years, Country } from "./DataSource";
+
 export class ScatterPlot {
     private readonly svg: d3.Selection<SVGGElement, {}, HTMLElement, any>;
     private readonly tooltip: d3.Selection<HTMLDivElement, {}, HTMLElement, any>;
 
-    private  data: Map<String, DataTuple[]>;
+    private data: DataSource;
 
     private readonly margin = { top: 20, right: 20, bottom: 30, left: 40 };
     private readonly width = 960 - this.margin.left - this.margin.right;
@@ -20,22 +20,23 @@ export class ScatterPlot {
     * axis - sets up axis
     */
     // setup x
-    private readonly xValue = (d: DataTuple) => d.gini;
+    private readonly xValue = (country: Country) => country.stats.get(this.nextYear).inequality.combined;
     private readonly xScale = d3.scaleLinear().range([0, this.width]);
-    private readonly xMap = (d: DataTuple) => this.xScale(this.xValue(d));
+    private readonly xMap = (country: Country) => this.xScale(this.xValue(country));
     private readonly xAxis = d3.axisBottom(this.xScale);
 
     // setup y
-    private readonly yValue = (d: DataTuple) => d.gdp;
+    private readonly yValue = (country: Country) => country.stats.get(this.nextYear).gdp;
     private readonly yScale = d3.scaleLinear().range([this.height, 0]);
-    private readonly yMap = (d: DataTuple) => this.yScale(this.yValue(d));
+    private readonly yMap = (country: Country) => this.yScale(this.yValue(country));
     private readonly yAxis = d3.axisLeft(this.yScale);
 
     // setup fill color
-    private readonly cValue = (d: DataTuple) => 'Europe';
+    private readonly cValue = (country: Country) => country.region;
     private readonly color = d3.scaleOrdinal(d3.schemeCategory10);
 
-    constructor(container: d3.Selection<d3.BaseType, {}, HTMLElement, any>) {
+    constructor(container: d3.Selection<d3.BaseType, {}, HTMLElement, any>, dataSource: DataSource) {
+        this.data = dataSource;
          // add the graph canvas to the body of the webpage
          this.svg = container.append("svg")
          .attr("width", this.width + this.margin.left + this.margin.right)
@@ -47,28 +48,12 @@ export class ScatterPlot {
         this.tooltip = container.append("div")
             .attr("class", "tooltip")
             .style("opacity", 0);
-    }
 
-    async create () : Promise<ScatterPlot> {
-        this.data = joinDataSets(
-            csv_semicolon.parse(await d3.text("data/gdp.csv")),
-            csv_semicolon.parse(await d3.text("data/inequality.csv")));
-    
-        let xMax = Number.NEGATIVE_INFINITY, xMin = Number.POSITIVE_INFINITY;
-        let yMax = Number.NEGATIVE_INFINITY, yMin = Number.POSITIVE_INFINITY;
-        this.data.forEach(year => year.forEach(country => {
-            if(!Number.isFinite(this.xValue(country)) || !Number.isFinite(this.yValue(country)))
-                return;
-                
-            xMax = Math.max(xMax, this.xValue(country));
-            xMin = Math.min(xMin, this.xValue(country));
-            yMax = Math.max(yMax, this.yValue(country));
-            yMin = Math.min(yMin, this.yValue(country));
-        }));
+        const limits = this.data.getStatLimits();
     
         // don't want dots overlapping axis, so add in buffer to data domain
-        this.xScale.domain([xMin * 0.9, xMax * 1.1]);
-        this.yScale.domain([yMin * 0.9, yMax * 1.1]);
+        this.xScale.domain([limits.ineq_comb.min * 0.9, limits.ineq_comb.max * 1.1]);
+        this.yScale.domain([limits.gdp.min * 0.9, limits.gdp.max * 1.1]);
     
         // x-axis
         this.svg
@@ -119,21 +104,20 @@ export class ScatterPlot {
             .attr("dy", ".35em")
             .style("text-anchor", "end")
             .text(function (d: any) { return d; });
-        return this;
     }
     
     public animateScatterPlot(year?: string) {
         if(year !== undefined)
             this.nextYear = year;
 
-        this.updateScatterPlot(this.data.get(this.nextYear));
+        this.updateScatterPlot(this.data.getCountries());
         console.log('Updating graph for ' + this.nextYear)
 
         let nextIndex = (years.indexOf(this.nextYear) + 1) % years.length;
         this.nextYear = years[nextIndex];
     }
 
-    private updateScatterPlot(data: DataTuple[]) {
+    private updateScatterPlot(data: Country[]) {
         const graph = this.svg.selectAll(".dot")
             .data(data);
         // Update 
@@ -145,7 +129,7 @@ export class ScatterPlot {
         graph.exit().remove();
     }
 
-    private updateDots(selection: d3.Selection<SVGCircleElement | BaseType, DataTuple, SVGGElement, {}>, isNew = false) {
+    private updateDots(selection: d3.Selection<SVGCircleElement | BaseType, Country, SVGGElement, {}>, isNew = false) {
         selection
             .attr("cx", this.xMap)
             .attr("cy", this.yMap)
@@ -153,13 +137,13 @@ export class ScatterPlot {
             selection
                 .attr("class", "dot")
                 .attr("r", 3.5)
-                .style("fill", d => this.color(this.cValue(d)))
-                .on("mouseover", d => {
+                .style("fill", country => this.color(this.cValue(country)))
+                .on("mouseover", country => {
                     this.tooltip.transition()
                         .duration(200)
                         .style("opacity", .9);
-                    this.tooltip.html(d.country + "<br/> (" + this.xValue(d)
-                        + ", " + this.yValue(d) + ")")
+                    this.tooltip.html(country.name + "<br/> (" + this.xValue(country)
+                        + ", " + this.yValue(country) + ")")
                         .style("left", (d3.event.pageX + 5) + "px")
                         .style("top", (d3.event.pageY - 28) + "px");
                 })
