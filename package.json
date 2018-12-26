@@ -6,6 +6,7 @@
     "tsc": "tsc",
     "build": "webpack --mode=production --config webpack.config.js ",
     "dev": "concurrently --kill-others \"npm run build-watch\" \"npm run dev-server\"",
+    "test": "echo \"No tests defined!\"",
     "build-watch": "webpack --mode=development --config webpack.config.js --watch",
     "dev-server": "webpack-dev-server --mode=development --hot"
   },
