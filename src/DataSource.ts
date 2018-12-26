@@ -71,8 +71,8 @@ export class DataSource {
             DataSource.csvLoader("ineq_life","data/inequality_life_expectancy.csv")
         ]);
 
-        const data = new Map(await dataSrcLoaders);
         const countries = await DataSource.readCountryInfoDB();
+        const data = new Map(await dataSrcLoaders);
 
         const dataSource = new DataSource();
         dataSource.data = new Map<string, Country>();
