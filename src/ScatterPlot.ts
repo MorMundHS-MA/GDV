@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { BaseType } from "d3";
+import { BaseType, easeLinear } from "d3";
 import { DataSource, years, Country } from "./DataSource";
 
 export class ScatterPlot {
@@ -130,10 +130,10 @@ export class ScatterPlot {
     }
 
     private updateDots(selection: d3.Selection<SVGCircleElement | BaseType, Country, SVGGElement, {}>, isNew = false) {
-        selection
-            .attr("cx", this.xMap)
-            .attr("cy", this.yMap)
         if(isNew) {
+            selection
+                .attr("cx", this.xMap)
+                .attr("cy", this.yMap)
             selection
                 .attr("class", "dot")
                 .attr("r", 3.5)
@@ -152,6 +152,13 @@ export class ScatterPlot {
                         .duration(500)
                         .style("opacity", 0);
                 });
+        } else {
+            selection
+            .transition()
+            .duration(1000)
+            .ease(easeLinear)
+                .attr("cx", this.xMap)
+                .attr("cy", this.yMap)
         }
     }
 }
