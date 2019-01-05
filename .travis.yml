@@ -3,7 +3,9 @@ cache: yarn
 node_js:
   - "11"
 
-script: yarn build
+script:
+  - yarn lint
+  - yarn build
 
 deploy:
   provider: pages

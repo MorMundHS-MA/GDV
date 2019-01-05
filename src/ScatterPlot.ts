@@ -1,48 +1,31 @@
 import * as d3 from "d3";
 import { BaseType, easeLinear } from "d3";
-import { DataSource, years, Country } from "./DataSource";
+import { DataSource, ICountry, years } from "./DataSource";
 
 export class ScatterPlot {
     private readonly svg: d3.Selection<SVGGElement, {}, HTMLElement, any>;
     private readonly tooltip: d3.Selection<HTMLDivElement, {}, HTMLElement, any>;
 
     private data: DataSource;
-    private selection = new Set<Country>();
+    private selection = new Set<ICountry>();
 
     private readonly margin = { top: 20, right: 20, bottom: 30, left: 40 };
     private readonly width = 960 - this.margin.left - this.margin.right;
     private readonly height = 500 - this.margin.top - this.margin.bottom;
     private nextYear = years[0];
-
-    /*
-    * value accessor - returns the value to encode for a given data object.
-    * scale - maps value to a visual display encoding, such as a pixel position.
-    * map function - maps from data value to display value
-    * axis - sets up axis
-    */
-    // setup x
-    private readonly xValue = (country: Country) => country.stats.get(this.nextYear).inequality.combined;
     private readonly xScale = d3.scaleLinear().range([0, this.width]);
-    private readonly xMap = (country: Country) => this.xScale(this.xValue(country));
     private readonly xAxis = d3.axisBottom(this.xScale);
-
-    // setup y
-    private readonly yValue = (country: Country) => country.stats.get(this.nextYear).gdp;
     private readonly yScale = d3.scaleLinear().range([this.height, 0]);
-    private readonly yMap = (country: Country) => this.yScale(this.yValue(country));
     private readonly yAxis = d3.axisLeft(this.yScale);
-
-    // setup fill color
-    private readonly cValue = (country: Country) => country.region;
     private readonly color = d3.scaleOrdinal(d3.schemeCategory10);
     private readonly unselectedOpacity = 0.3;
     // event subscribers
-    private onSelectChange: ((countrySelection: Country[]) => void)[] = [];
+    private onSelectChange: Array<(countrySelection: ICountry[]) => void> = [];
 
     constructor(container: d3.Selection<d3.BaseType, {}, HTMLElement, any>, dataSource: DataSource) {
         this.data = dataSource;
          // add the graph canvas to the body of the webpage
-         this.svg = container.append("svg")
+        this.svg = container.append("svg")
          .attr("width", this.width + this.margin.left + this.margin.right)
          .attr("height", this.height + this.margin.top + this.margin.bottom)
          .append("g")
@@ -56,7 +39,7 @@ export class ScatterPlot {
         const limits = this.data.getStatLimits();
 
         // don't want dots overlapping axis, so add in buffer to data domain
-        this.xScale.domain([limits.ineq_comb.min * 0.9, limits.ineq_comb.max * 1.1]);
+        this.xScale.domain([limits.ineqComb.min * 0.9, limits.ineqComb.max * 1.1]);
         this.yScale.domain([limits.gdp.min * 0.9, limits.gdp.max * 1.1]);
 
         // x-axis
@@ -88,11 +71,11 @@ export class ScatterPlot {
         this.animateScatterPlot();
 
         // draw legend
-        var legend = this.svg.selectAll(".legend")
+        const legend = this.svg.selectAll(".legend")
             .data(this.color.domain())
             .enter().append("g")
             .attr("class", "legend")
-            .attr("transform", function (d, i) { return "translate(0," + i * 20 + ")"; });
+            .attr("transform", (d, i) => "translate(0," + i * 20 + ")");
 
         // draw legend colored rectangles
         legend.append("rect")
@@ -107,52 +90,70 @@ export class ScatterPlot {
             .attr("y", 9)
             .attr("dy", ".35em")
             .style("text-anchor", "end")
-            .text(function (d: any) { return d; });
+            .text((country) => country);
     }
 
     public animateScatterPlot(year?: string) {
-        if(year !== undefined)
+        if (year !== undefined) {
             this.nextYear = year;
+        }
 
         this.updateScatterPlot(this.data.getCountries());
-        console.log('Updating graph for ' + this.nextYear)
+        console.log("Updating graph for " + this.nextYear);
 
-        let nextIndex = (years.indexOf(this.nextYear) + 1) % years.length;
+        const nextIndex = (years.indexOf(this.nextYear) + 1) % years.length;
         this.nextYear = years[nextIndex];
     }
 
-    public subscribeOnSelectionChanged(listener: (selection: Country[]) => void) {
+    public subscribeOnSelectionChanged(listener: (selection: ICountry[]) => void) {
         this.onSelectChange.push(listener);
     }
 
-    private updateScatterPlot(data: Country[]) {
+    /*
+    * value accessor - returns the value to encode for a given data object.
+    * scale - maps value to a visual display encoding, such as a pixel position.
+    * map function - maps from data value to display value
+    * axis - sets up axis
+    */
+    // setup x
+    private readonly xValue = (country: ICountry) => country.stats.get(this.nextYear).inequality.combined;
+    private readonly xMap = (country: ICountry) => this.xScale(this.xValue(country));
+
+    // setup y
+    private readonly yValue = (country: ICountry) => country.stats.get(this.nextYear).gdp;
+    private readonly yMap = (country: ICountry) => this.yScale(this.yValue(country));
+
+    // setup fill color
+    private readonly cValue = (country: ICountry) => country.region;
+
+    private updateScatterPlot(data: ICountry[]) {
         const graph = this.svg.selectAll(".dot")
             .data(data);
         // Update
         this.updateDots(graph);
 
-        //Enter
-        this.addDots(graph.enter().append('circle'));
+        // Enter
+        this.addDots(graph.enter().append("circle"));
 
         graph.exit().remove();
     }
 
-    private addDots(selection: d3.Selection<SVGCircleElement | BaseType, Country, SVGGElement, {}>) {
+    private addDots(selection: d3.Selection<SVGCircleElement | BaseType, ICountry, SVGGElement, {}>) {
         selection
         .attr("cx", this.xMap)
         .attr("cy", this.yMap)
         .attr("class", "dot")
         .attr("r", 3.5)
-        .style("fill", country => this.color(this.cValue(country)))
-        .style("opacity", country => {
-            if(this.selection.has(country) || this.selection.size === 0) {
+        .style("fill", (country) => this.color(this.cValue(country)))
+        .style("opacity", (country) => {
+            if (this.selection.has(country) || this.selection.size === 0) {
                 // Item is selected or there is not selection
                 return 1;
             } else {
                 return this.unselectedOpacity;
             }
         })
-        .on("mouseover", country => {
+        .on("mouseover", (country) => {
             this.tooltip.transition()
                 .duration(200)
                 .style("opacity", .9);
@@ -166,18 +167,18 @@ export class ScatterPlot {
                 .duration(500)
                 .style("opacity", 0);
         })
-        .on("click", country => {
-            if(this.selection.has(country)) {
+        .on("click", (country) => {
+            if (this.selection.has(country)) {
                 this.selection.delete(country);
             } else {
                 this.selection.add(country);
             }
 
-            this.onSelectChange.forEach(h => h(Array.from(this.selection)));
-            // looks weird but passing data as an argument to the function would be kinda wrong too
-            this.svg.selectAll(".dot").data(this.svg.selectAll(".dot").data() as Country[])
-                .style("opacity", country => {
-                    if(this.selection.has(country) || this.selection.size === 0) {
+            this.onSelectChange.forEach((h) => h(Array.from(this.selection)));
+
+            this.svg.selectAll(".dot").data(this.data.getCountries())
+                .style("opacity", (c) => {
+                    if (this.selection.has(c) || this.selection.size === 0) {
                         // Item is selected or there is not selection
                         return 1;
                     } else {
@@ -187,12 +188,12 @@ export class ScatterPlot {
         });
     }
 
-    private updateDots(selection: d3.Selection<SVGCircleElement | BaseType, Country, SVGGElement, {}>) {
+    private updateDots(selection: d3.Selection<SVGCircleElement | BaseType, ICountry, SVGGElement, {}>) {
         selection
             .transition()
             .duration(1000)
             .ease(easeLinear)
                 .attr("cx", this.xMap)
-                .attr("cy", this.yMap)
+                .attr("cy", this.yMap);
     }
 }
