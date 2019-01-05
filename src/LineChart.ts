@@ -1,9 +1,9 @@
-import { Country, CountryStats, StatLimits, years } from "./DataSource";
-import { scaleLinear } from "d3-scale";
+import { easeLinear, line } from "d3";
 import { axisBottom, axisLeft, axisRight } from "d3-axis";
-import { line, easeLinear } from "d3";
+import { scaleLinear } from "d3-scale";
+import { ICountry, ICountryStats, StatLimits, years } from "./DataSource";
 
-type YearStats = {year: string, stats: CountryStats};
+interface IYearStats {year: string; stats: ICountryStats; }
 
 export class LineChart {
     private readonly svg: d3.Selection<SVGGElement, {}, HTMLElement, any>;
@@ -12,42 +12,25 @@ export class LineChart {
     private readonly width = 960 - this.margin.left - this.margin.right;
     private readonly height = 500 - this.margin.top - this.margin.bottom;
 
-    private data: YearStats[] = [];
-    private country: Country;
-    /*
-    * value accessor - returns the value to encode for a given data object.
-    * scale - maps value to a visual display encoding, such as a pixel position.
-    * map function - maps from data value to display value
-    * axis - sets up axis
-    */
-    // setup y
-    private readonly yValue = (stats: YearStats) => stats.stats.inequality.combined;
+    private data: IYearStats[] = [];
+    private country: ICountry;
     private readonly yScale = scaleLinear().range([this.height, 0]);
-    private readonly yMap = (stats: YearStats) => this.yScale(this.yValue(stats));
     private readonly yAxis = axisLeft(this.yScale);
-
-    // setup second y axis
-    private readonly y2Value = (stats: YearStats) => stats.stats.gdp;
     private readonly y2Scale = scaleLinear().range([this.height, 0]);
-    private readonly y2Map = (stats: YearStats) => this.y2Scale(this.y2Value(stats));
     private readonly y2Axis = axisRight(this.y2Scale);
-
-    // setup x axis
-    private readonly xValue = (stats: YearStats) => Number.parseInt(stats.year);
     private readonly xScale = scaleLinear().range([0, this.width]);
-    private readonly xMap = (stats: YearStats) => this.xScale(this.xValue(stats));
     private readonly xAxis = axisBottom(this.xScale);
 
     // setup line
-    private readonly lineIneq = line<YearStats>()
-        .x(stat => this.xMap(stat))
-        .y(stat => this.yMap(stat));
+    private readonly lineIneq = line<IYearStats>()
+        .x((stat) => this.xMap(stat))
+        .y((stat) => this.yMap(stat));
 
-    private readonly lineGdp = line<YearStats>()
-        .x(stat => this.xMap(stat))
-        .y(stat => this.y2Map(stat));
+    private readonly lineGdp = line<IYearStats>()
+        .x((stat) => this.xMap(stat))
+        .y((stat) => this.y2Map(stat));
 
-    constructor(container: d3.Selection<d3.BaseType, {}, HTMLElement, any>, dataSource: Country, limits: StatLimits) {
+    constructor(container: d3.Selection<d3.BaseType, {}, HTMLElement, any>, dataSource: ICountry, limits: StatLimits) {
          // add the graph canvas to the body of the webpage
          this.svg = container.append("svg")
             .attr("width", this.width + this.margin.left + this.margin.right)
@@ -55,18 +38,18 @@ export class LineChart {
             .append("g")
             .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
 
-        limits = new StatLimits();
-        for (const year of dataSource.stats) {
+         limits = new StatLimits();
+         for (const year of dataSource.stats) {
             limits.gdp.expandRange(year[1].gdp);
-            limits.ineq_comb.expandRange(year[1].inequality.combined);
+            limits.ineqComb.expandRange(year[1].inequality.combined);
         }
         // don't want dots overlapping axis, so add in buffer to data domain
-        this.xScale.domain([Number.parseInt(years[0]) - 1, Number.parseInt(years[years.length - 1]) + 1]);
-        this.yScale.domain([limits.ineq_comb.min * 0.9, limits.ineq_comb.max * 1.1]);
-        this.y2Scale.domain([limits.gdp.min * 0.9, limits.gdp.max * 1.1])
+         this.xScale.domain([Number.parseInt(years[0]) - 1, Number.parseInt(years[years.length - 1]) + 1]);
+         this.yScale.domain([limits.ineqComb.min * 0.9, limits.ineqComb.max * 1.1]);
+         this.y2Scale.domain([limits.gdp.min * 0.9, limits.gdp.max * 1.1]);
 
         // x-axis
-        this.svg
+         this.svg
             .append("g")
             .attr("class", "x axis")
             .attr("transform", "translate(0," + this.height + ")")
@@ -79,7 +62,7 @@ export class LineChart {
             .text("Calories");
 
         // y-axis
-        this.svg
+         this.svg
             .append("g")
             .attr("class", "y axis")
             .call(this.yAxis)
@@ -89,10 +72,10 @@ export class LineChart {
             .attr("y", 6)
             .attr("dy", ".71em")
             .style("text-anchor", "end")
-            .text("Protein (g)")
+            .text("Protein (g)");
 
         // y-axis
-        this.svg
+         this.svg
             .append("g")
             .attr("class", "y axis")
             .attr("transform", "translate(" + this.width + ", 0)")
@@ -103,20 +86,20 @@ export class LineChart {
             .attr("y", 6)
             .attr("dy", ".71em")
             .style("text-anchor", "end")
-            .text("Protein (g)")
+            .text("Protein (g)");
 
-        this.svg
+         this.svg
             .append("path")
             .attr("class", "line gdp");
 
-        this.svg
+         this.svg
             .append("path")
             .attr("class", "line ineq");
 
-        this.setCountry(dataSource);
+         this.setCountry(dataSource);
     }
 
-    public setCountry(country: Country) {
+    public setCountry(country: ICountry) {
         this.country = country;
         this.data = [];
         for (const year of country.stats) {
@@ -125,6 +108,23 @@ export class LineChart {
 
         this.updateChart();
     }
+    /*
+    * value accessor - returns the value to encode for a given data object.
+    * scale - maps value to a visual display encoding, such as a pixel position.
+    * map function - maps from data value to display value
+    * axis - sets up axis
+    */
+    // setup y
+    private readonly yValue = (stats: IYearStats) => stats.stats.inequality.combined;
+    private readonly yMap = (stats: IYearStats) => this.yScale(this.yValue(stats));
+
+    // setup second y axis
+    private readonly y2Value = (stats: IYearStats) => stats.stats.gdp;
+    private readonly y2Map = (stats: IYearStats) => this.y2Scale(this.y2Value(stats));
+
+    // setup x axis
+    private readonly xValue = (stats: IYearStats) => Number.parseInt(stats.year);
+    private readonly xMap = (stats: IYearStats) => this.xScale(this.xValue(stats));
 
     private updateChart() {
         const graph = this.svg.selectAll(".dot")

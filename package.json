@@ -7,6 +7,7 @@
     "build": "webpack --mode=production --config webpack.config.js ",
     "dev": "concurrently --kill-others \"npm run build-watch\" \"npm run dev-server\"",
     "test": "echo \"No tests defined!\"",
+    "lint": "tslint src/**/*.ts",
     "build-watch": "webpack --mode=development --config webpack.config.js --watch",
     "dev-server": "webpack-dev-server --mode=development --hot"
   },
@@ -15,7 +16,7 @@
     "@types/node": "^10.12.15",
     "concurrently": "^4.1.0",
     "ts-loader": "^5.3.1",
-    "tslint": "^5.11.0",
+    "tslint": "^5.12.0",
     "typescript": "^3.2.2",
     "webpack": "^4.27.1",
     "webpack-cli": "^3.1.2",
