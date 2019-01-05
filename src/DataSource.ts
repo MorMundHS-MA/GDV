@@ -10,8 +10,17 @@ export interface Country {
     region: string;
     stats: Map<string, CountryStats>
 }
+export interface CountryStats {
+    gdp: number,
+    inequality: {
+        combined: number,
+        education: number,
+        life_expectancy: number,
+        income: number
+    }
+}
 
-class StatLimits {
+export class StatLimits {
     [key:string]: Limit;
     gdp = new Limit();
     ineq_comb = new Limit();
@@ -199,14 +208,4 @@ const csv_semicolon = dsvFormat(';').parse;
 interface CountryInfoDatabase {
     nameToCode: Map<string, string>,
     infoFromCode: Map<string, {code: string, name: string, region: string}>
-}
-
-interface CountryStats {
-    gdp: number,
-    inequality: {
-        combined: number,
-        education: number,
-        life_expectancy: number,
-        income: number
-    }
 }

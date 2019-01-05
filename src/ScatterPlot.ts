@@ -145,7 +145,6 @@ export class ScatterPlot {
         .attr("r", 3.5)
         .style("fill", country => this.color(this.cValue(country)))
         .style("opacity", country => {
-            console.log("aaaaa");
             if(this.selection.has(country) || this.selection.size === 0) {
                 // Item is selected or there is not selection
                 return 1;
@@ -167,8 +166,7 @@ export class ScatterPlot {
                 .duration(500)
                 .style("opacity", 0);
         })
-        .on("click", (country, index, elements) => {
-            let element = elements[index] as SVGCircleElement;
+        .on("click", country => {
             if(this.selection.has(country)) {
                 this.selection.delete(country);
             } else {
@@ -179,7 +177,6 @@ export class ScatterPlot {
             // looks weird but passing data as an argument to the function would be kinda wrong too
             this.svg.selectAll(".dot").data(this.svg.selectAll(".dot").data() as Country[])
                 .style("opacity", country => {
-                    console.log("aaaaa");
                     if(this.selection.has(country) || this.selection.size === 0) {
                         // Item is selected or there is not selection
                         return 1;
