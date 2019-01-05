@@ -8,7 +8,13 @@ let chart1: LineChart;
 DataSource.loadData().then((data) => {
     plot = new ScatterPlot(select("#plot"), data);
     plot.subscribeOnSelectionChanged(country => {
-        chart1 = new LineChart(select("#chart1"), country[0], data.getStatLimits());
+        if(country.length !== 0) {
+            if(chart1) {
+                chart1.setCountry(country[0]);
+            } else {
+                chart1 = new LineChart(select("#chart1"), country[0], data.getStatLimits());
+            }
+        }
     });
     //setInterval(() => plot.animateScatterPlot(), 1000)
 }).catch(err => console.error(err));
