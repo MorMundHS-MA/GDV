@@ -95,15 +95,20 @@ export class LineChart {
          this.svg
             .append("path")
             .attr("class", "line ineq");
-
          this.setCountry(dataSource);
+
+         this.svg
+            .append("text")
+            .text(this.country.name);
     }
 
     public setCountry(country: ICountry) {
         this.country = country;
         this.data = [];
         for (const year of country.stats) {
-            this.data.push({year: year[0], stats: year[1]});
+            if(year[1].gdp !== undefined && year[1].inequality.combined !== undefined) {
+                this.data.push({year: year[0], stats: year[1]});
+            }
         }
 
         this.updateChart();
