@@ -16,5 +16,8 @@ DataSource.loadData().then((data) => {
             }
         }
     });
+    for (const country of data.getCountries()) {
+        const chart = new LineChart(select("#charts"), country, data.getStatLimits());
+    }
     // setInterval(() => plot.animateScatterPlot(), 1000)
 }).catch((err) => console.error(err));
