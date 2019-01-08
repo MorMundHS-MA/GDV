@@ -106,7 +106,7 @@ export class LineChart {
         this.country = country;
         this.data = [];
         for (const year of country.stats) {
-            if (year[1].gdp !== undefined && year[1].inequality.combined !== undefined) {
+            if (Number.isFinite(year[1].gdp) && Number.isFinite(year[1].inequality.combined)) {
                 this.data.push({year: year[0], stats: year[1]});
             }
         }
