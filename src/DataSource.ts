@@ -79,6 +79,16 @@ export class StatLimits {
             this.expandRange(stat);
         }
     }
+
+    /**
+     * Returns the aggregated limit of all inequality limits.
+     */
+    public getIneqLimitAggregated(): Limit {
+        const limit = new Limit();
+        [this.ineqComb, this.ineqEdu, this.ineqInc, this.ineqLife]
+            .forEach((ineqLimit) => limit.expand(ineqLimit));
+        return limit;
+    }
 }
 
 class Limit {
@@ -95,6 +105,11 @@ class Limit {
         }
         this.min = Math.min(newNumber, this.min);
         this.max = Math.max(newNumber, this.max);
+    }
+
+    public expand(other: Limit) {
+        this.expandRange(other.max);
+        this.expandRange(other.min);
     }
 }
 
