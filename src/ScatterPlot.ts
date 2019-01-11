@@ -169,7 +169,7 @@ export class ScatterPlot {
         .attr("cx", this.xMap)
         .attr("cy", this.yMap)
         .attr("class", "dot")
-        .attr("r", 3.5)
+        .attr("r", 4.5)
         .style("fill", (country) => this.color(this.cValue(country)))
         .style("opacity", (country) => {
             if (this.selection.has(country) || this.selection.size === 0) {
