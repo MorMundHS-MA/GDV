@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { Axis, BaseType, easeLinear, ScaleLinear } from "d3";
+import { Axis, BaseType, easeLinear, ScaleLinear, ScaleLogarithmic } from "d3";
 import { DataSource, ICountry, years } from "./DataSource";
 
 export class ScatterPlot {
@@ -9,11 +9,13 @@ export class ScatterPlot {
     private data: DataSource;
     private selection = new Set<ICountry>();
 
-    private readonly margin = { top: 20, right: 20, bottom: 30, left: 40 };
-    private readonly width = 960 - this.margin.left - this.margin.right;
-    private readonly height = 500 - this.margin.top - this.margin.bottom;
+    private readonly margin = { top: 20, right: 20, bottom: 30, left: 30 };
+    private readonly width: number;
+    private readonly height: number;
+
     private nextYear = years[0];
-    private readonly yScale: ScaleLinear<number, number>;
+
+    private readonly yScale: ScaleLogarithmic<number, number>;
     private readonly yAxis: Axis<{valueOf(): number; }>;
     private readonly xScale: ScaleLinear<number, number>;
     private readonly xAxis: Axis<{valueOf(): number; }>;
@@ -37,8 +39,8 @@ export class ScatterPlot {
 
         this.xScale = d3.scaleLinear().range([0, this.width]);
         this.xAxis = d3.axisBottom(this.xScale);
-        this.yScale = d3.scaleLinear().range([this.height, 0]);
-        this.yAxis = d3.axisLeft(this.yScale);
+        this.yScale = d3.scaleLog().range([this.height, 0]);
+        this.yAxis = d3.axisLeft(this.yScale).tickFormat(d3.format("~s"));
 
          // add the graph canvas to the body of the webpage
         this.svg = container.append("svg")
