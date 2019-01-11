@@ -24,12 +24,10 @@ export class LineChart {
 
     private gdpAxisElement: d3.Selection<SVGGElement, {}, HTMLElement, any>;
     private ineqAxisElement: d3.Selection<SVGGElement, {}, HTMLElement, any>;
-    private timeAxisElement: d3.Selection<SVGGElement, {}, HTMLElement, any>;
 
     constructor(
         container: d3.Selection<d3.BaseType, {}, HTMLElement, any>,
-        selectedCountries: CountryStats,
-        limits: StatLimits) {
+        selectedCountries: CountryStats) {
         let heightAttr = container.attr("data-chart-height");
         let widthAttr = container.attr("data-chart-width");
         if (heightAttr === null || widthAttr === null) {
@@ -57,7 +55,7 @@ export class LineChart {
         this.timeScale.domain([Number.parseInt(years[0]) - 1, Number.parseInt(years[years.length - 1]) + 1]);
 
          // Year axis
-        this.timeAxisElement = this.svg
+        this.svg
             .append("g")
             .attr("class", "x axis")
             .attr("transform", "translate(0," + this.height + ")")
