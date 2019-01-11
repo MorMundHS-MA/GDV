@@ -1,3 +1,4 @@
+import "bootstrap";
 import { select } from "d3-selection";
 import { DataSource, ICountry, ICountryStats, StatValue } from "./DataSource";
 import { LineChart } from "./LineChart";
