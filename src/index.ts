@@ -1,5 +1,5 @@
 import { select } from "d3-selection";
-import { DataSource, ICountry } from "./DataSource";
+import { DataSource, ICountry, ICountryStats, StatValue } from "./DataSource";
 import { LineChart } from "./LineChart";
 import { ScatterPlot } from "./ScatterPlot";
 
@@ -9,17 +9,24 @@ DataSource.loadData().then((data) => {
     plot = new ScatterPlot(select("#plot"), data);
     plot.subscribeOnSelectionChanged((country) => {
         if (country.length !== 0) {
+            const selectedCountries = new Map(
+                country.map<[ICountry, Map<StatValue, Array<{year: string, value: number}>>]>(
+                    (c) => [c, data.getCountryStats(c)]));
             if (chart1) {
-                chart1.setCountry(country[0]);
+                chart1.setCountries(selectedCountries);
             } else {
-                chart1 = new LineChart(select("#chart1"), country[0], data.getStatLimits());
+                chart1 = new LineChart(select("#chart1"), selectedCountries, data.getStatLimits());
             }
         }
     });
 
     // Create a chart each frame to not lag on load
     const createChart = (queue: ICountry[]) => {
-        const chart = new LineChart(select("#charts"), queue.shift(), data.getStatLimits());
+        const country = queue.shift();
+        const chart = new LineChart(
+            select("#charts"),
+            new Map([[country, data.getCountryStats(country)]]),
+            data.getStatLimits());
         if (queue.length > 0) {
             setTimeout(() => createChart(queue), 0);
         }
