@@ -127,6 +127,14 @@ export class ScatterPlot {
         this.onSelectChange.push(listener);
     }
 
+    public setSelectionByName(selection: string[]) {
+        this.setSelection(selection.map((name) => this.data.getCountry(name)));
+    }
+
+    public setSelection(selection: ICountry[]) {
+        this.selection = new Set(selection);
+        this.updateOpacityForSelection();
+    }
     /*
     * value accessor - returns the value to encode for a given data object.
     * scale - maps value to a visual display encoding, such as a pixel position.
@@ -161,7 +169,7 @@ export class ScatterPlot {
         .attr("cx", this.xMap)
         .attr("cy", this.yMap)
         .attr("class", "dot")
-        .attr("r", 3.5)
+        .attr("r", 4.5)
         .style("fill", (country) => this.color(this.cValue(country)))
         .style("opacity", (country) => {
             if (this.selection.has(country) || this.selection.size === 0) {
@@ -192,17 +200,7 @@ export class ScatterPlot {
                 this.selection.add(country);
             }
 
-            this.onSelectChange.forEach((h) => h(Array.from(this.selection)));
-
-            this.svg.selectAll(".dot").data(this.data.getCountries())
-                .style("opacity", (c) => {
-                    if (this.selection.has(c) || this.selection.size === 0) {
-                        // Item is selected or there is not selection
-                        return 1;
-                    } else {
-                        return this.unselectedOpacity;
-                    }
-                });
+            this.updateOpacityForSelection();
         });
     }
 
@@ -213,5 +211,18 @@ export class ScatterPlot {
             .ease(easeLinear)
                 .attr("cx", this.xMap)
                 .attr("cy", this.yMap);
+    }
+
+    private updateOpacityForSelection() {
+        this.onSelectChange.forEach((h) => h(Array.from(this.selection)));
+        this.svg.selectAll(".dot").data(this.data.getCountries())
+        .style("opacity", (c) => {
+            if (this.selection.has(c) || this.selection.size === 0) {
+                // Item is selected or there is not selection
+                return 1;
+            } else {
+                return this.unselectedOpacity;
+            }
+        });
     }
 }

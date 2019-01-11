@@ -6,6 +6,7 @@ import { ScatterPlot } from "./ScatterPlot";
 
 let plot: ScatterPlot;
 let chart1: LineChart;
+
 DataSource.loadData().then((data) => {
     plot = new ScatterPlot(select("#plot"), data);
     plot.subscribeOnSelectionChanged((country) => {
@@ -36,3 +37,5 @@ DataSource.loadData().then((data) => {
 
     // setInterval(() => plot.animateScatterPlot(), 1000)
 }).catch((err) => console.error(err));
+
+select("#Nummer01").on("click", () => plot.setSelectionByName(["Germany, Gahna"]));
