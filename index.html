@@ -4,7 +4,12 @@
 
 <head>
     <title>typescript-webpack-minimal</title>
-    <style>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+
+     <style>
         body {
             font: 11px sans-serif;
         }
@@ -43,13 +48,26 @@
 </head>
 
 <body>
-    <div id="root">
-        <div>
-            <div data-chart-height="700" data-chart-width="600" id="plot" style="display: inline;"></div>
-            <div data-chart-height="500" data-chart-width="960" id="chart1" style="display: inline; vertical-align: center"></div>
-        </div>
-        <div data-chart-height="500" data-chart-width="960" id="charts"></div>
+    <div class="row justify-content-center" style="float: none; margin: 0 auto;">
+        <h1>Wächst die Wirtschaft während die Welt gerechter wird?</h1>
     </div>
+
+    <div class="row">
+        <div class="col">
+            <div data-chart-height="700" data-chart-width="600" id="plot" style="display: inline;"></div>
+            <div  id="chart1" style="display: inline; vertical-align: center"></div>
+        </div>
+        <div class="col"> 
+            <div class="row">
+                    <div data-chart-height="500" data-chart-width="960" id="charts"></div>
+            </div>
+            <div class="row" style="background-color:orange;">
+                .col
+            </div>
+        </div>
+    </div> 
+
+
     <script src="dist/bundle.js"></script>
 </body>
 
