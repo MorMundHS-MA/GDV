@@ -38,4 +38,4 @@ DataSource.loadData().then((data) => {
     // setInterval(() => plot.animateScatterPlot(), 1000)
 }).catch((err) => console.error(err));
 
-select("#Nummer01").on("click", () => plot.setSelectionByName(["Germany, Gahna"]));
+select("#Nummer01").on("click", () => plot.setSelectionByName(["Germany", "Ghana"]));
