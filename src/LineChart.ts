@@ -1,10 +1,11 @@
-import { easeLinear, line } from "d3";
+import { easeLinear, line, Line } from "d3";
 import { Axis, axisBottom, axisLeft, axisRight } from "d3-axis";
 import { scaleLinear, ScaleLinear } from "d3-scale";
-import { ICountry, ICountryStats, StatLimits, years } from "./DataSource";
+import { ICountry, StatLimits, StatValue, years } from "./DataSource";
 
-interface IYearStats {year: string; stats: ICountryStats; }
+interface IYearStats {year: string; value: number; }
 
+type CountryStats = Map<ICountry, Map<StatValue, Array<{year: string, value: number}>>>;
 export class LineChart {
     private readonly svg: d3.Selection<SVGGElement, {}, HTMLElement, any>;
 
@@ -12,25 +13,23 @@ export class LineChart {
     private readonly width: number;
     private readonly height: number;
 
-    private data: IYearStats[] = [];
-    private country: ICountry;
-    private readonly yScale: ScaleLinear<number, number>;
-    private readonly yAxis: Axis<{valueOf(): number; }>;
-    private readonly y2Scale: ScaleLinear<number, number>;
-    private readonly y2Axis: Axis<{valueOf(): number; }>;
-    private readonly xScale: ScaleLinear<number, number>;
-    private readonly xAxis: Axis<{valueOf(): number; }>;
+    private data: CountryStats = new Map();
 
-    // setup line
-    private readonly lineIneq = line<IYearStats>()
-        .x((stat) => this.xMap(stat))
-        .y((stat) => this.yMap(stat));
+    private readonly ineqScale: ScaleLinear<number, number>;
+    private readonly ineqAxis: Axis<{valueOf(): number; }>;
+    private readonly gdpScale: ScaleLinear<number, number>;
+    private readonly gdpAxis: Axis<{valueOf(): number; }>;
+    private readonly timeScale: ScaleLinear<number, number>;
+    private readonly timeAxis: Axis<{valueOf(): number; }>;
 
-    private readonly lineGdp = line<IYearStats>()
-        .x((stat) => this.xMap(stat))
-        .y((stat) => this.y2Map(stat));
+    private gdpAxisElement: d3.Selection<SVGGElement, {}, HTMLElement, any>;
+    private ineqAxisElement: d3.Selection<SVGGElement, {}, HTMLElement, any>;
+    private timeAxisElement: d3.Selection<SVGGElement, {}, HTMLElement, any>;
 
-    constructor(container: d3.Selection<d3.BaseType, {}, HTMLElement, any>, dataSource: ICountry, limits: StatLimits) {
+    constructor(
+        container: d3.Selection<d3.BaseType, {}, HTMLElement, any>,
+        selectedCountries: CountryStats,
+        limits: StatLimits) {
         let heightAttr = container.attr("data-chart-height");
         let widthAttr = container.attr("data-chart-width");
         if (heightAttr === null || widthAttr === null) {
@@ -41,12 +40,12 @@ export class LineChart {
         this.width = Number.parseInt(widthAttr) - this.margin.left - this.margin.right;
         this.height = Number.parseInt(heightAttr) - this.margin.top - this.margin.bottom;
 
-        this.yScale = scaleLinear().range([this.height, 0]);
-        this.yAxis = axisLeft(this.yScale);
-        this.y2Scale = scaleLinear().range([this.height, 0]);
-        this.y2Axis = axisRight(this.y2Scale);
-        this.xScale = scaleLinear().range([0, this.width]);
-        this.xAxis = axisBottom(this.xScale);
+        this.ineqScale = scaleLinear().range([this.height, 0]);
+        this.ineqAxis = axisLeft(this.ineqScale);
+        this.gdpScale = scaleLinear().range([this.height, 0]);
+        this.gdpAxis = axisRight(this.gdpScale);
+        this.timeScale = scaleLinear().range([0, this.width]);
+        this.timeAxis = axisBottom(this.timeScale);
 
          // add the graph canvas to the body of the webpage
         this.svg = container.append("svg")
@@ -55,124 +54,130 @@ export class LineChart {
             .append("g")
             .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
 
-        limits = new StatLimits();
-        for (const year of dataSource.stats) {
-            limits.gdp.expandRange(year[1].gdp);
-            limits.ineqComb.expandRange(year[1].inequality.combined);
-        }
-        // don't want dots overlapping axis, so add in buffer to data domain
-        this.xScale.domain([Number.parseInt(years[0]) - 1, Number.parseInt(years[years.length - 1]) + 1]);
-        this.yScale.domain([limits.ineqComb.min * 0.9, limits.ineqComb.max * 1.1]);
-        this.y2Scale.domain([limits.gdp.min * 0.9, limits.gdp.max * 1.1]);
+        this.timeScale.domain([Number.parseInt(years[0]) - 1, Number.parseInt(years[years.length - 1]) + 1]);
 
-        // x-axis
-        this.svg
+         // Year axis
+        this.timeAxisElement = this.svg
             .append("g")
             .attr("class", "x axis")
             .attr("transform", "translate(0," + this.height + ")")
-            .call(this.xAxis)
-            .append("text")
-            .attr("class", "label")
-            .attr("x", this.width)
-            .attr("y", -6)
-            .style("text-anchor", "end")
-            .text("Calories");
+            .call(this.timeAxis);
 
-        // y-axis
-        this.svg
+        // Inequality axis
+        this.ineqAxisElement = this.svg
+            .append("g")
+            .attr("class", "y axis");
+
+        // GDP axis
+        this.gdpAxisElement = this.svg
             .append("g")
             .attr("class", "y axis")
-            .call(this.yAxis)
-            .append("text")
-            .attr("class", "label")
-            .attr("transform", "rotate(-90)")
-            .attr("y", 6)
-            .attr("dy", ".71em")
-            .style("text-anchor", "end")
-            .text("Protein (g)");
+            .attr("transform", "translate(" + this.width + ", 0)");
 
-        // y-axis
-        this.svg
-            .append("g")
-            .attr("class", "y axis")
-            .attr("transform", "translate(" + this.width + ", 0)")
-            .call(this.y2Axis)
-            .append("text")
-            .attr("class", "label")
-            .attr("transform", "rotate(-90)")
-            .attr("y", 6)
-            .attr("dy", ".71em")
-            .style("text-anchor", "end")
-            .text("Protein (g)");
-
-        this.svg
-            .append("path")
-            .attr("class", "line gdp");
-
-        this.svg
-            .append("path")
-            .attr("class", "line ineq");
-        this.setCountry(dataSource);
-
+        // Label
         this.svg
             .append("text")
-            .text(this.country.name);
+            .attr("class", "country-label");
+
+        this.setCountries(selectedCountries);
     }
 
-    public setCountry(country: ICountry) {
-        this.country = country;
-        this.data = [];
-        for (const year of country.stats) {
-            if (Number.isFinite(year[1].gdp) && Number.isFinite(year[1].inequality.combined)) {
-                this.data.push({year: year[0], stats: year[1]});
-            }
+    public setCountries(countries: CountryStats) {
+        // Get changes in data
+        const newCountries = Array.from(countries.keys()).filter((country) => !this.data.has(country));
+        const removedCountries = Array.from(this.data.keys()).filter((country) => !countries.has(country));
+
+        // Delete lines of removed countries
+        for (const country of removedCountries) {
+            this.svg.selectAll("." + country.code).remove();
         }
 
-        this.updateChart();
+        this.data = countries;
+        this.reScaleDomain();
+
+        // Update existing lines to match rescaled domain
+        for (const country of this.data) {
+            this.updateDottedLine(StatValue.gdp, country[0]);
+            this.updateDottedLine(StatValue.ineqComb, country[0]);
+        }
+
+        // Add newly selected countries
+        for (const country of newCountries) {
+            this.createDottedLine(StatValue.gdp, country);
+            this.createDottedLine(StatValue.ineqComb, country);
+        }
+
+        // Update label
+        this.svg.select(".country-label").text(Array.from(this.data.keys()).map((country) => country.name).join(", "));
     }
-    /*
-    * value accessor - returns the value to encode for a given data object.
-    * scale - maps value to a visual display encoding, such as a pixel position.
-    * map function - maps from data value to display value
-    * axis - sets up axis
-    */
-    // setup y
-    private readonly yValue = (stats: IYearStats) => stats.stats.inequality.combined;
-    private readonly yMap = (stats: IYearStats) => this.yScale(this.yValue(stats));
 
-    // setup second y axis
-    private readonly y2Value = (stats: IYearStats) => stats.stats.gdp;
-    private readonly y2Map = (stats: IYearStats) => this.y2Scale(this.y2Value(stats));
+    private reScaleDomain() {
+        const limits = new StatLimits();
 
-    // setup x axis
-    private readonly xValue = (stats: IYearStats) => Number.parseInt(stats.year);
-    private readonly xMap = (stats: IYearStats) => this.xScale(this.xValue(stats));
+        for (const country of this.data) {
+            limits.expandRangeMany(Array.from(country[0].stats.values()));
+        }
 
-    private updateChart() {
-        const graph = this.svg.selectAll(".dot")
-            .data(this.data);
+        const ineqLimit = limits.getIneqLimitAggregated();
 
-        graph
+        // don't want dots overlapping axis, so add in buffer to data domain
+        this.ineqScale.domain([ineqLimit.min * 0.9, ineqLimit.max * 1.1]);
+        this.gdpScale.domain([limits.gdp.min * 0.9, limits.gdp.max * 1.1]);
+
+        // Update the drawn axis
+        this.gdpAxisElement.call(this.gdpAxis);
+        this.ineqAxisElement.call(this.ineqAxis);
+    }
+    private updateDottedLine(statType: StatValue, country: ICountry) {
+        this.svg.selectAll(`.dot.${statType}.${country.code}`)
+            .data(this.data.get(country).get(statType))
             .transition()
             .duration(200)
-            .ease(easeLinear)
-                .attr("cx", this.xMap)
-                .attr("cy", this.yMap);
+                .ease(easeLinear)
+                    .attr("cx", (stats) => this.timeScale(Number.parseInt(stats.year)))
+                    .attr("cy", this.getStatMapper(statType));
 
-        graph.enter().append("circle")
-            .attr("class", "dot")
-            .attr("cx", this.xMap)
-            .attr("cy", this.yMap)
-            .attr("r", 5);
+        this.svg.select(`.line.${statType}.${country.code}`)
+            .datum(this.data.get(country).get(statType))
+            .transition()
+                .attr("d", this.getLine(statType));
+    }
 
-        graph.exit().remove();
+    private createDottedLine(statType: StatValue, country: ICountry) {
+        this.svg
+            .append("path")
+            .attr("class", `line ${statType} ${country.code}`)
+            .datum(this.data.get(country).get(statType))
+            .attr("d", this.getLine(statType));
 
-        this.svg.select(".line.ineq")
-            .datum(this.data)
-            .attr("d", this.lineIneq);
+        this.svg
+            .selectAll(`.dot.${statType}.${country.code}`)
+            .data(this.data.get(country).get(statType))
+            .enter()
+                .append("circle")
+                .attr("class", `dot ${statType} ${country.code}`)
+                .attr("cx", (stats) => this.timeScale(Number.parseInt(stats.year)))
+                .attr("cy", this.getStatMapper(statType))
+                .attr("r", 5)
+            .exit()
+                .remove();
+    }
 
-        this.svg.select(".line.gdp")
-            .datum(this.data)
-            .attr("d", this.lineGdp);
+    private getLine(statType: StatValue): Line<IYearStats> {
+        return line<IYearStats>()
+            .x((stats) => this.timeScale(Number.parseInt(stats.year)))
+            .y(this.getStatMapper(statType));
+    }
+
+    private getStatMapper(statType: StatValue): ((stats: IYearStats) => number) {
+        switch (statType) {
+            case StatValue.gdp:
+                return (stats) => this.gdpScale(stats.value);
+            case StatValue.ineqComb:
+            case StatValue.IneqLife:
+            case StatValue.ineqEdu:
+            case StatValue.ineqInc:
+            return (stats) => this.ineqScale(stats.value);
+        }
     }
 }
