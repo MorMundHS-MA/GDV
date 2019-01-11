@@ -12,28 +12,33 @@
      <style>
         body {
             font: 11px sans-serif;
+            background: #050505
         }
+
+        .h1{
+            color: white;
+        }
+        
 
         .axis path,
         .axis line {
             fill: none;
-            stroke: #000;
+            stroke: white;
             shape-rendering: crispEdges;
         }
 
         .dot {
-            stroke: #000;
         }
 
         .line.ineq {
             fill: none;
-            stroke: #040305;
+            stroke: white;
             stroke-width: 3;
         }
 
         .line.gdp {
             fill: none;
-            stroke: #040305;
+            stroke: white;
             stroke-width: 3;
             stroke-dasharray: 1%
         }
@@ -48,14 +53,20 @@
 </head>
 
 <body>
-    <div class="row justify-content-center" style="float: none; margin: 0 auto;">
-        <h1>Wächst die Wirtschaft während die Welt gerechter wird?</h1>
+    <div class="row justify-content-center"  style="float: none; margin: 0 auto; margin-bottom: 1cm">
+        <h1 style="color : white;">Wächst die Wirtschaft während die Welt gerechter wird?</h1>
     </div>
 
     <div class="row">
         <div class="col">
-            <div data-chart-height="700" data-chart-width="600" id="plot" style="display: inline;"></div>
-            <div  id="chart1" style="display: inline; vertical-align: center"></div>
+            <div class ="row justify-content-center">
+                <h4 style="color : white;">Übersicht der aktuellen Wirtschaftsstärke in Relation zur Ungleichheit </h4>
+                <a data-target="#myModal" data-toggle="modal" href="#myModal">Info</a>  
+            </div>
+            <div class ="row justify-content-center">
+                <div data-chart-height="700" data-chart-width="600" id="plot" style="display: inline;"></div>
+                <div  id="chart1" style="display: inline; vertical-align: center"></div>
+            </div>
         </div>
         <div class="col"> 
             <div class="row">
@@ -69,6 +80,29 @@
 
 
     <script src="dist/bundle.js"></script>
+
+    <!-- The Modal -->
+  <div class="modal fade" id="myModal">
+        <div class="modal-dialog modal-sm">
+          <div class="modal-content">        
+            <!-- Modal Header -->
+            <div class="modal-header">
+              <h4 class="modal-title">Modal Heading</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>    
+            <!-- Modal body -->
+            <div class="modal-body">
+              Modal body..
+            </div>          
+            <!-- Modal footer -->
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div> 
+          </div>
+        </div>
+      </div>  
+    </div>
+
 </body>
 
 </html>
