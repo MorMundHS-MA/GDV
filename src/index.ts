@@ -20,9 +20,9 @@ DataSource.loadData().then((data) => {
     // Create a chart each frame to not lag on load
     const createChart = (queue: ICountry[]) => {
         const chart = new LineChart(select("#charts"), queue.shift(), data.getStatLimits());
-        //if (queue.length > 0) {
-            //setTimeout(() => createChart(queue), 0);
-        //}
+        if (queue.length > 0) {
+            setTimeout(() => createChart(queue), 0);
+        }
     };
     createChart(data.getCountries());
 
