@@ -1,6 +1,6 @@
 import { easeLinear, line } from "d3";
-import { axisBottom, axisLeft, axisRight } from "d3-axis";
-import { scaleLinear } from "d3-scale";
+import { Axis, axisBottom, axisLeft, axisRight } from "d3-axis";
+import { scaleLinear, ScaleLinear } from "d3-scale";
 import { ICountry, ICountryStats, StatLimits, years } from "./DataSource";
 
 interface IYearStats {year: string; stats: ICountryStats; }
@@ -9,17 +9,17 @@ export class LineChart {
     private readonly svg: d3.Selection<SVGGElement, {}, HTMLElement, any>;
 
     private readonly margin = { top: 20, right: 50, bottom: 30, left: 40 };
-    private readonly width = 960 - this.margin.left - this.margin.right;
-    private readonly height = 500 - this.margin.top - this.margin.bottom;
+    private readonly width: number;
+    private readonly height: number;
 
     private data: IYearStats[] = [];
     private country: ICountry;
-    private readonly yScale = scaleLinear().range([this.height, 0]);
-    private readonly yAxis = axisLeft(this.yScale);
-    private readonly y2Scale = scaleLinear().range([this.height, 0]);
-    private readonly y2Axis = axisRight(this.y2Scale);
-    private readonly xScale = scaleLinear().range([0, this.width]);
-    private readonly xAxis = axisBottom(this.xScale);
+    private readonly yScale: ScaleLinear<number, number>;
+    private readonly yAxis: Axis<{valueOf(): number; }>;
+    private readonly y2Scale: ScaleLinear<number, number>;
+    private readonly y2Axis: Axis<{valueOf(): number; }>;
+    private readonly xScale: ScaleLinear<number, number>;
+    private readonly xAxis: Axis<{valueOf(): number; }>;
 
     // setup line
     private readonly lineIneq = line<IYearStats>()
@@ -31,25 +31,42 @@ export class LineChart {
         .y((stat) => this.y2Map(stat));
 
     constructor(container: d3.Selection<d3.BaseType, {}, HTMLElement, any>, dataSource: ICountry, limits: StatLimits) {
+        let heightAttr = container.attr("data-chart-height");
+        let widthAttr = container.attr("data-chart-width");
+        if (heightAttr === null || widthAttr === null) {
+            heightAttr = "500";
+            widthAttr = "960";
+        }
+
+        this.width = Number.parseInt(widthAttr) - this.margin.left - this.margin.right;
+        this.height = Number.parseInt(heightAttr) - this.margin.top - this.margin.bottom;
+
+        this.yScale = scaleLinear().range([this.height, 0]);
+        this.yAxis = axisLeft(this.yScale);
+        this.y2Scale = scaleLinear().range([this.height, 0]);
+        this.y2Axis = axisRight(this.y2Scale);
+        this.xScale = scaleLinear().range([0, this.width]);
+        this.xAxis = axisBottom(this.xScale);
+
          // add the graph canvas to the body of the webpage
-         this.svg = container.append("svg")
+        this.svg = container.append("svg")
             .attr("width", this.width + this.margin.left + this.margin.right)
             .attr("height", this.height + this.margin.top + this.margin.bottom)
             .append("g")
             .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
 
-         limits = new StatLimits();
-         for (const year of dataSource.stats) {
+        limits = new StatLimits();
+        for (const year of dataSource.stats) {
             limits.gdp.expandRange(year[1].gdp);
             limits.ineqComb.expandRange(year[1].inequality.combined);
         }
         // don't want dots overlapping axis, so add in buffer to data domain
-         this.xScale.domain([Number.parseInt(years[0]) - 1, Number.parseInt(years[years.length - 1]) + 1]);
-         this.yScale.domain([limits.ineqComb.min * 0.9, limits.ineqComb.max * 1.1]);
-         this.y2Scale.domain([limits.gdp.min * 0.9, limits.gdp.max * 1.1]);
+        this.xScale.domain([Number.parseInt(years[0]) - 1, Number.parseInt(years[years.length - 1]) + 1]);
+        this.yScale.domain([limits.ineqComb.min * 0.9, limits.ineqComb.max * 1.1]);
+        this.y2Scale.domain([limits.gdp.min * 0.9, limits.gdp.max * 1.1]);
 
         // x-axis
-         this.svg
+        this.svg
             .append("g")
             .attr("class", "x axis")
             .attr("transform", "translate(0," + this.height + ")")
@@ -62,7 +79,7 @@ export class LineChart {
             .text("Calories");
 
         // y-axis
-         this.svg
+        this.svg
             .append("g")
             .attr("class", "y axis")
             .call(this.yAxis)
@@ -75,7 +92,7 @@ export class LineChart {
             .text("Protein (g)");
 
         // y-axis
-         this.svg
+        this.svg
             .append("g")
             .attr("class", "y axis")
             .attr("transform", "translate(" + this.width + ", 0)")
@@ -88,16 +105,16 @@ export class LineChart {
             .style("text-anchor", "end")
             .text("Protein (g)");
 
-         this.svg
+        this.svg
             .append("path")
             .attr("class", "line gdp");
 
-         this.svg
+        this.svg
             .append("path")
             .attr("class", "line ineq");
-         this.setCountry(dataSource);
+        this.setCountry(dataSource);
 
-         this.svg
+        this.svg
             .append("text")
             .text(this.country.name);
     }
