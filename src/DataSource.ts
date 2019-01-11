@@ -4,6 +4,14 @@ import { json, text } from "d3-fetch";
 
 export const years = ["2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017"];
 
+export enum StatValue {
+    gdp = "gdp",
+    ineqComb = "ineqComb",
+    ineqEdu = "ineqEdu",
+    ineqInc = "ineqInc",
+    IneqLife = "IneqLife"
+}
+
 export interface ICountry {
     code: string;
     name: string;
@@ -21,12 +29,56 @@ export interface ICountryStats {
 }
 
 export class StatLimits {
-    [key: string]: Limit;
     public gdp = new Limit();
     public ineqComb = new Limit();
     public ineqEdu = new Limit();
     public ineqInc = new Limit();
     public ineqLife = new Limit();
+
+    public getLimit(resID: string) {
+        switch (resID) {
+            case "gdp":
+                return this.gdp;
+            case "ineqComb":
+                return this.ineqComb;
+            case "ineqEdu":
+                return this.ineqEdu;
+            case "ineqInc":
+                return this.ineqInc;
+            case "ineqLife":
+                return this.ineqLife;
+            default:
+                throw new Error("Invalid resource id key");
+        }
+    }
+
+    public setRange(stat: ICountryStats) {
+        this.setRangeMany([stat]);
+    }
+
+    public setRangeMany(stats: ICountryStats[]) {
+        this.gdp = new Limit();
+        this.ineqComb = new Limit();
+        this.ineqEdu = new Limit();
+        this.ineqInc = new Limit();
+        this.ineqLife = new Limit();
+
+        this.expandRangeMany(stats);
+    }
+
+    public expandRange(stat: ICountryStats) {
+        this.gdp.expandRange(stat.gdp);
+        this.ineqComb.expandRange(stat.inequality.combined);
+        this.ineqEdu.expandRange(stat.inequality.education);
+        this.ineqInc.expandRange(stat.inequality.income);
+        this.ineqLife.expandRange(stat.inequality.life_expectancy);
+    }
+
+    public expandRangeMany(stats: ICountryStats[]) {
+        for (const stat of stats) {
+            this.expandRange(stat);
+        }
+    }
 }
 
 class Limit {
@@ -81,19 +133,20 @@ export class DataSource {
 
         return dataSource;
     }
-     /**
-      * Used to match names that differ from the official style in the countries.json
-      */
-     private static forcedCountryNames = new Map([
-        ["BRN", ["Brunei Darussalam"]],
-        ["PSE", ["Palestine, State of"]],
-        ["STP", ["Sao Tome and Principe"]],
-        ["MKD", ["The former Yugoslav Republic of Macedonia"]],
-        ["HKG", ["Hong Kong, China (SAR)"]],
-        // This mapping is the wrong way round in the dataset
-        ["COG", ["Congo (Democratic Republic of the)"]],
-        ["COD", ["Congo"]],
-    ]);
+
+    /**
+     * Used to match names that differ from the official style in the countries.json
+     */
+    private static forcedCountryNames = new Map([
+    ["BRN", ["Brunei Darussalam"]],
+    ["PSE", ["Palestine, State of"]],
+    ["STP", ["Sao Tome and Principe"]],
+    ["MKD", ["The former Yugoslav Republic of Macedonia"]],
+    ["HKG", ["Hong Kong, China (SAR)"]],
+    // This mapping is the wrong way round in the dataset
+    ["COG", ["Congo (Democratic Republic of the)"]],
+    ["COD", ["Congo"]],
+]);
 
     private static async csvLoader(resourceID: string, source: string): Promise<[string, Map<string, DSVRowString>]> {
         const countryMappedData = new Map(
@@ -111,7 +164,7 @@ export class DataSource {
             if (row === undefined) {
                 return null;
             } else {
-                limits[resourceID].expandRange(parseFloat(row[year]));
+                limits.getLimit(resourceID).expandRange(parseFloat(row[year]));
                 return row[year];
             }
         };
@@ -199,6 +252,28 @@ export class DataSource {
         return Array.from(this.data.values());
     }
 
+    public getCountryStats(country: ICountry): Map<StatValue, Array<{year: string, value: number}>> {
+        const data = new Map<StatValue, Array<{year: string, value: number}>>();
+        for (const valueStr in StatValue) {
+            if (!StatValue.hasOwnProperty(valueStr)) {
+                continue;
+            }
+            const value: StatValue = (StatValue as any)[valueStr];
+
+            const yearlyStat = new Array<{year: string, value: number}>();
+            for (const year of country.stats) {
+                const stat = statAccessor(year[1], value);
+                if (Number.isFinite(stat)) {
+                    yearlyStat.push({year: year[0], value: stat});
+                }
+            }
+
+            data.set(value, yearlyStat);
+        }
+
+        return data;
+    }
+
     /**
      * Returns the value range for the statistics in the data set.
      */
@@ -208,6 +283,21 @@ export class DataSource {
 }
 
 const csvSemicolon = dsvFormat(";").parse;
+
+function statAccessor(stats: ICountryStats, value: StatValue) {
+    switch (value) {
+        case StatValue.gdp:
+            return stats.gdp;
+        case StatValue.ineqComb:
+            return stats.inequality.combined;
+        case StatValue.ineqEdu:
+            return stats.inequality.education;
+        case StatValue.ineqInc:
+            return stats.inequality.income;
+        case StatValue.IneqLife:
+            return stats.inequality.life_expectancy;
+    }
+}
 
 interface ICountryInfoDatabase {
     nameToCode: Map<string, string>;

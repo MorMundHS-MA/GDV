@@ -56,9 +56,9 @@ export class LineChart {
             .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
 
         limits = new StatLimits();
+
         for (const year of dataSource.stats) {
-            limits.gdp.expandRange(year[1].gdp);
-            limits.ineqComb.expandRange(year[1].inequality.combined);
+            limits.expandRange(year[1]);
         }
         // don't want dots overlapping axis, so add in buffer to data domain
         this.xScale.domain([Number.parseInt(years[0]) - 1, Number.parseInt(years[years.length - 1]) + 1]);
