@@ -1,5 +1,5 @@
 import { select } from "d3-selection";
-import { DataSource } from "./DataSource";
+import { DataSource, ICountry } from "./DataSource";
 import { LineChart } from "./LineChart";
 import { ScatterPlot } from "./ScatterPlot";
 
@@ -16,8 +16,15 @@ DataSource.loadData().then((data) => {
             }
         }
     });
-    for (const country of data.getCountries()) {
-        const chart = new LineChart(select("#charts"), country, data.getStatLimits());
-    }
+
+    // Create a chart each frame to not lag on load
+    const createChart = (queue: ICountry[]) => {
+        const chart = new LineChart(select("#charts"), queue.shift(), data.getStatLimits());
+        if (queue.length > 0) {
+            setTimeout(() => createChart(queue), 0);
+        }
+    };
+    createChart(data.getCountries());
+
     // setInterval(() => plot.animateScatterPlot(), 1000)
 }).catch((err) => console.error(err));
