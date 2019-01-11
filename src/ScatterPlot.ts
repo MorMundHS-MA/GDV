@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { BaseType, easeLinear } from "d3";
+import { Axis, BaseType, easeLinear, ScaleLinear } from "d3";
 import { DataSource, ICountry, years } from "./DataSource";
 
 export class ScatterPlot {
@@ -13,10 +13,10 @@ export class ScatterPlot {
     private readonly width = 960 - this.margin.left - this.margin.right;
     private readonly height = 500 - this.margin.top - this.margin.bottom;
     private nextYear = years[0];
-    private readonly xScale = d3.scaleLinear().range([0, this.width]);
-    private readonly xAxis = d3.axisBottom(this.xScale);
-    private readonly yScale = d3.scaleLinear().range([this.height, 0]);
-    private readonly yAxis = d3.axisLeft(this.yScale);
+    private readonly yScale: ScaleLinear<number, number>;
+    private readonly yAxis: Axis<{valueOf(): number; }>;
+    private readonly xScale: ScaleLinear<number, number>;
+    private readonly xAxis: Axis<{valueOf(): number; }>;
     private readonly color = d3.scaleOrdinal(d3.schemeCategory10);
     private readonly unselectedOpacity = 0.3;
     // event subscribers
@@ -24,6 +24,22 @@ export class ScatterPlot {
 
     constructor(container: d3.Selection<d3.BaseType, {}, HTMLElement, any>, dataSource: DataSource) {
         this.data = dataSource;
+
+        let heightAttr = container.attr("data-chart-height");
+        let widthAttr = container.attr("data-chart-width");
+        if (heightAttr === null || widthAttr === null) {
+            heightAttr = "500";
+            widthAttr = "960";
+        }
+
+        this.width = Number.parseInt(widthAttr) - this.margin.left - this.margin.right;
+        this.height = Number.parseInt(heightAttr) - this.margin.top - this.margin.bottom;
+
+        this.xScale = d3.scaleLinear().range([0, this.width]);
+        this.xAxis = d3.axisBottom(this.xScale);
+        this.yScale = d3.scaleLinear().range([this.height, 0]);
+        this.yAxis = d3.axisLeft(this.yScale);
+
          // add the graph canvas to the body of the webpage
         this.svg = container.append("svg")
          .attr("width", this.width + this.margin.left + this.margin.right)
