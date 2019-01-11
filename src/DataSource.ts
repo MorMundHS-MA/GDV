@@ -289,6 +289,20 @@ export class DataSource {
         return data;
     }
 
+    public getCountryStatsMany(countries: string[]):
+        Array<[ICountry, Map<StatValue, Array<{year: string, value: number}>>]> {
+        const countryList = new Array<[ICountry, Map<StatValue, Array<{year: string, value: number}>>]>();
+        for (const country of countries) {
+            const resolveCountry = this.getCountry(country);
+            countryList.push([
+                resolveCountry,
+                this.getCountryStats(resolveCountry)
+            ]);
+        }
+
+        return countryList;
+    }
+
     /**
      * Returns the value range for the statistics in the data set.
      */
