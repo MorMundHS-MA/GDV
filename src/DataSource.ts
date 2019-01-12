@@ -1,4 +1,4 @@
-import { ok } from "assert";
+import { ok, equal, notStrictEqual, strictEqual } from "assert";
 import { dsvFormat, DSVRowString } from "d3-dsv";
 import { json, text } from "d3-fetch";
 
@@ -133,8 +133,14 @@ export class DataSource {
         dataSource.data = new Map<string, ICountry>();
         for (let countryCSVName of data.get("gdp").keys()) {
             countryCSVName = countryCSVName.trim();
+            let code: string;
+            // If the name loaded from the csv is already a 3 letter code do nothing
+            if (countryCSVName.length === 3) {
+                code = countryCSVName;
+            } else {
+                code = countries.nameToCode.get(countryCSVName);
+            }
 
-            const code = countries.nameToCode.get(countryCSVName);
             const countryInfo = countries.infoFromCode.get(code);
             ok(countryInfo, `No country info for ${countryCSVName}`);
             // Merge the country info and the statistics and add them to the database
@@ -165,8 +171,17 @@ export class DataSource {
 
     private static async csvLoader(resourceID: string, source: string): Promise<[string, Map<string, DSVRowString>]> {
         const countryMappedData = new Map(
-            csvSemicolon(await text(source)).map<[string, DSVRowString]>((row) =>
-                [row.Country.trim(), row]));
+            csvSemicolon(await text(source)).map<[string, DSVRowString]>((row) => {
+                if (row.Alpha_3 !== undefined) {
+                    strictEqual(
+                        row.Alpha_3.length, 3, "Alpha3 country code was not 3 chars long. CSV source: " + source);
+                    return [row.Alpha_3, row];
+                } else {
+                    const countryName = row.Country.trim();
+                    notStrictEqual(countryName.length, 3, "Country names with 3 characters would confuse the loader");
+                    return [countryName, row];
+                }
+            }));
         return [resourceID, countryMappedData];
     }
 
