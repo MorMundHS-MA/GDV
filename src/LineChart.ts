@@ -182,13 +182,13 @@ export class LineChart {
             .attr("class", "legend countries")
             .attr("transform", (d, i) => "translate(0," + i * 20 + ")");
         legend.append("text")
-            .attr("x", this.width - 20)
+            .attr("x", this.width - 24)
             .attr("y", 9)
             .attr("dy", ".35em")
             .style("text-anchor", "end")
             .text((country) => country.name);
         legend.append("rect")
-            .attr("x", this.width - 18)
+            .attr("x", this.width - 22)
             .attr("width", 18)
             .attr("height", 18)
             .style("fill", (country) => this.colors.get(country));
