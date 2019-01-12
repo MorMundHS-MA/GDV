@@ -1,4 +1,4 @@
-import { ok, equal, notStrictEqual, strictEqual } from "assert";
+import { notStrictEqual, ok, strictEqual } from "assert";
 import { dsvFormat, DSVRowString } from "d3-dsv";
 import { json, text } from "d3-fetch";
 
