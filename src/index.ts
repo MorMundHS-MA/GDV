@@ -17,7 +17,7 @@ DataSource.loadData().then((data) => {
             if (chart1) {
                 chart1.setCountries(selectedCountries);
             } else {
-                chart1 = new LineChart(select("#chart1"), selectedCountries, data.getStatLimits());
+                chart1 = new LineChart(select("#chart1"), selectedCountries);
             }
         }
     });
@@ -27,8 +27,7 @@ DataSource.loadData().then((data) => {
         const country = queue.shift();
         const chart = new LineChart(
             select("#charts"),
-            new Map([[country, data.getCountryStats(country)]]),
-            data.getStatLimits());
+            new Map([[country, data.getCountryStats(country)]]));
         if (queue.length > 0) {
             setTimeout(() => createChart(queue), 0);
         }
