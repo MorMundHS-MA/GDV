@@ -84,7 +84,7 @@ export class ScatterPlot {
                 .attr("y", 6)
                 .attr("dy", ".71em")
                 .style("text-anchor", "end")
-                .text("GDP per Person");
+                .text("GDP per Person in USD");
 
         this.animateScatterPlot();
 
@@ -119,8 +119,8 @@ export class ScatterPlot {
         this.updateScatterPlot(this.data.getCountries());
         console.log("Updating graph for " + this.nextYear);
 
-        const nextIndex = (years.indexOf(this.nextYear) + 1) % years.length;
-        this.nextYear = years[nextIndex];
+        // const nextIndex = (years.indexOf(this.nextYear) + 1) % years.length;
+        // this.nextYear = years[nextIndex];
     }
 
     public subscribeOnSelectionChanged(listener: (selection: ICountry[]) => void) {
@@ -135,6 +135,7 @@ export class ScatterPlot {
         this.selection = new Set(selection);
         this.updateOpacityForSelection();
     }
+
     /*
     * value accessor - returns the value to encode for a given data object.
     * scale - maps value to a visual display encoding, such as a pixel position.
@@ -184,9 +185,9 @@ export class ScatterPlot {
                 .duration(200)
                 .style("opacity", .9);
             this.tooltip.html(country.name + "<br/> (" + this.xValue(country)
-                + ", " + this.yValue(country) + ")")
-                .style("left", (d3.event.pageX + 5) + "px")
-                .style("top", (d3.event.pageY - 28) + "px");
+                + ", " + d3.format(".3~s")(this.yValue(country)) + " USD)")
+                .style("left", (this.xMap(country) + 55) + "px")
+                .style("top", this.yMap(country) + "px");
         })
         .on("mouseout", () => {
             this.tooltip.transition()
