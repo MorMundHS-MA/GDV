@@ -87,15 +87,24 @@ export class ScatterPlot {
                 .style("text-anchor", "end")
                 .text("GDP per Person in USD");
 
+        const labelContainer = this.svg .append("g");
+        this.yearLabel = labelContainer
+            .append("text")
+                .attr("class", "year label")
+                .attr("x", this.width / 2)
+                .text(this.displayedYear);
+
+        this.animateScatterPlot();
+
         // draw legend
         const legend = this.svg.selectAll(".legend")
-            .data(this.color.domain())
-            .enter().append("g")
-            .attr("class", "legend")
-            .attr("transform", (d, i) => "translate(0," + i * 20 + ")")
-            .on("click", (region) => {
-                this.setSelection(this.data.getCountries().filter((country) => country.region === region));
-            });
+        .data(this.color.domain())
+        .enter().append("g")
+        .attr("class", "legend")
+        .attr("transform", (d, i) => "translate(0," + i * 20 + ")")
+        .on("click", (region) => {
+            this.setSelection(this.data.getCountries().filter((country) => country.region === region));
+        });
 
         // draw legend colored rectangles
         legend.append("rect")
@@ -111,14 +120,6 @@ export class ScatterPlot {
             .attr("dy", ".35em")
             .style("text-anchor", "end")
             .text((country) => country);
-        const labelContainer = this.svg .append("g");
-        this.yearLabel = labelContainer
-            .append("text")
-                .attr("class", "year label")
-                .attr("x", this.width / 2)
-                .text(this.displayedYear);
-
-        this.animateScatterPlot();
     }
 
     public animateScatterPlot(year?: string) {
