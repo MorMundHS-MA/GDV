@@ -73,10 +73,17 @@ export class LineChart {
             .attr("class", "y axis")
             .attr("transform", "translate(" + this.width + ", 0)");
 
-        // Label
-        this.svg
+        // Static line legend (dotted vs normal)
+        this.svg.selectAll(".legend.lines")
+            .data(["━ ━ GDP", "━━━ Inequality"]).enter()
+            .append("g")
+            .attr("class", ".legend.lines")
+            .attr("transform", (d, i) => "translate(0," + i * 20 + ")")
             .append("text")
-            .attr("class", "country-label");
+                .attr("x", 20)
+                .attr("y", 9)
+                .attr("dy", ".35em")
+                .text((val) => val);
 
         this.setCountries(selectedCountries);
     }
@@ -108,8 +115,7 @@ export class LineChart {
             this.createDottedLine(StatValue.ineqComb, country);
         }
 
-        // Update label
-        this.svg.select(".country-label").text(Array.from(this.data.keys()).map((country) => country.name).join(", "));
+        this.updateCountryLegend();
     }
 
     private reScaleDomain() {
@@ -167,6 +173,28 @@ export class LineChart {
                 .attr("r", 5)
             .exit()
                 .remove();
+    }
+
+    private updateCountryLegend() {
+        const selection = this.svg.selectAll(".legend.countries").data(Array.from(this.data.keys()));
+        const legend = selection.enter()
+            .append("g")
+            .attr("class", "legend countries")
+            .attr("transform", (d, i) => "translate(0," + i * 20 + ")");
+        legend.append("text")
+            .attr("x", this.width - 20)
+            .attr("y", 9)
+            .attr("dy", ".35em")
+            .style("text-anchor", "end")
+            .text((country) => country.name);
+        legend.append("rect")
+            .attr("x", this.width - 18)
+            .attr("width", 18)
+            .attr("height", 18)
+            .style("fill", (country) => this.colors.get(country));
+
+        selection.select("text").text((country) => country.name);
+        selection.exit().remove();
     }
 
     private getLine(statType: StatValue): Line<IYearStats> {
