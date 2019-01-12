@@ -53,6 +53,10 @@
             fill: #222222;
             font-weight: bolder;
         }
+
+        .year.label {
+            font-size: larger;
+        }
     </style>
 </head>
 
@@ -73,6 +77,8 @@
     </div>
     <div class="row justify-content-center">
         <div class="col-4">
+            <button id="animation-control" class="plot-control">Start Animation</button>
+            <button id="reset-selection" class="plot-control d-none">Reset selection</button>
             <div data-chart-height="600" data-chart-width="600" id="plot"></div>
         </div>
         <div class="col-6">

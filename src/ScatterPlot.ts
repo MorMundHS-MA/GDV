@@ -1,10 +1,11 @@
 import * as d3 from "d3";
-import { Axis, BaseType, easeLinear, ScaleLinear, ScaleLogarithmic } from "d3";
+import { Axis, BaseType, easeQuad, ScaleLinear, ScaleLogarithmic } from "d3";
 import { DataSource, ICountry, years } from "./DataSource";
 
 export class ScatterPlot {
     private readonly svg: d3.Selection<SVGGElement, {}, HTMLElement, any>;
     private readonly tooltip: d3.Selection<HTMLDivElement, {}, HTMLElement, any>;
+    private readonly yearLabel: d3.Selection<SVGTextElement, {}, HTMLElement, any>;
 
     private data: DataSource;
     private selection = new Set<ICountry>();
@@ -13,7 +14,7 @@ export class ScatterPlot {
     private readonly width: number;
     private readonly height: number;
 
-    private nextYear = years[0];
+    private displayedYear = years[0];
 
     private readonly yScale: ScaleLogarithmic<number, number>;
     private readonly yAxis: Axis<{valueOf(): number; }>;
@@ -86,14 +87,15 @@ export class ScatterPlot {
                 .style("text-anchor", "end")
                 .text("GDP per Person in USD");
 
-        this.animateScatterPlot();
-
         // draw legend
         const legend = this.svg.selectAll(".legend")
             .data(this.color.domain())
             .enter().append("g")
             .attr("class", "legend")
-            .attr("transform", (d, i) => "translate(0," + i * 20 + ")");
+            .attr("transform", (d, i) => "translate(0," + i * 20 + ")")
+            .on("click", (region) => {
+                this.setSelection(this.data.getCountries().filter((country) => country.region === region));
+            });
 
         // draw legend colored rectangles
         legend.append("rect")
@@ -109,18 +111,23 @@ export class ScatterPlot {
             .attr("dy", ".35em")
             .style("text-anchor", "end")
             .text((country) => country);
+        const labelContainer = this.svg .append("g");
+        this.yearLabel = labelContainer
+            .append("text")
+                .attr("class", "year label")
+                .attr("x", this.width / 2)
+                .text(this.displayedYear);
+
+        this.animateScatterPlot();
     }
 
     public animateScatterPlot(year?: string) {
         if (year !== undefined) {
-            this.nextYear = year;
+            this.displayedYear = year;
         }
 
+        this.yearLabel.text(this.displayedYear);
         this.updateScatterPlot(this.data.getCountries());
-        console.log("Updating graph for " + this.nextYear);
-
-        // const nextIndex = (years.indexOf(this.nextYear) + 1) % years.length;
-        // this.nextYear = years[nextIndex];
     }
 
     public subscribeOnSelectionChanged(listener: (selection: ICountry[]) => void) {
@@ -136,6 +143,10 @@ export class ScatterPlot {
         this.updateOpacityForSelection();
     }
 
+    public getDisplayedYear() {
+        return this.displayedYear;
+    }
+
     /*
     * value accessor - returns the value to encode for a given data object.
     * scale - maps value to a visual display encoding, such as a pixel position.
@@ -143,11 +154,11 @@ export class ScatterPlot {
     * axis - sets up axis
     */
     // setup x
-    private readonly xValue = (country: ICountry) => country.stats.get(this.nextYear).inequality.combined;
+    private readonly xValue = (country: ICountry) => country.stats.get(this.displayedYear).inequality.combined;
     private readonly xMap = (country: ICountry) => this.xScale(this.xValue(country));
 
     // setup y
-    private readonly yValue = (country: ICountry) => country.stats.get(this.nextYear).gdp;
+    private readonly yValue = (country: ICountry) => country.stats.get(this.displayedYear).gdp;
     private readonly yMap = (country: ICountry) => this.yScale(this.yValue(country));
 
     // setup fill color
@@ -209,7 +220,7 @@ export class ScatterPlot {
         selection
             .transition()
             .duration(1000)
-            .ease(easeLinear)
+            .ease(easeQuad)
                 .attr("cx", this.xMap)
                 .attr("cy", this.yMap);
     }
