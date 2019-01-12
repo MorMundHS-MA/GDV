@@ -18,6 +18,11 @@ DataSource.loadData().then((data) => {
                 chart1.setCountries(selectedCountries);
             } else {
                 chart1 = new LineChart(select("#chart1"), selectedCountries);
+                select("#reset-selection")
+                    .classed("d-none", false)
+                    .on("click", () => {
+                        plot.setSelection([]);
+                    });
             }
         }
     });
