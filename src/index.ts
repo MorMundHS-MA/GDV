@@ -1,12 +1,13 @@
 import "bootstrap";
+import { event } from "d3";
 import { select } from "d3-selection";
-import { DataSource, ICountry, ICountryStats, StatValue } from "./DataSource";
+import { DataSource, ICountry, StatValue, years } from "./DataSource";
 import { LineChart } from "./LineChart";
 import { ScatterPlot } from "./ScatterPlot";
 
 let plot: ScatterPlot;
 let chart1: LineChart;
-
+let anim: NodeJS.Timeout;
 DataSource.loadData().then((data) => {
     plot = new ScatterPlot(select("#plot"), data);
     plot.subscribeOnSelectionChanged((country) => {
@@ -38,10 +39,29 @@ DataSource.loadData().then((data) => {
         }
     };
     createChart(data.getCountries());
-
-    // setInterval(() => plot.animateScatterPlot(), 1000)
 }).catch((err) => console.error(err));
 
 select("#Nummer01").on("click", () => {
    plot.setSelectionByName(["Germany", "France"]);
+});
+
+select("#animation-control").on("click", () => {
+    const isRunning = anim !== undefined;
+    const animation = () => {
+        const nextIndex = (years.indexOf(plot.getDisplayedYear()) + 1) % years.length;
+        plot.animateScatterPlot(years[nextIndex]);
+    };
+
+    let text: string;
+    if (isRunning) {
+        clearInterval(anim);
+        anim = undefined;
+        text = "Start Animation";
+    } else {
+        animation();
+        anim = setInterval(animation, 2000);
+        text = "Stop Animation";
+    }
+
+    event.target.textContent = text;
 });
