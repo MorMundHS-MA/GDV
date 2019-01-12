@@ -63,28 +63,28 @@ export class ScatterPlot {
         // x-axis
         this.svg
             .append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + this.height + ")")
-            .call(this.xAxis)
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + this.height + ")")
+                .call(this.xAxis)
             .append("text")
-            .attr("class", "label")
-            .attr("x", this.width)
-            .attr("y", -6)
-            .style("text-anchor", "end")
-            .text("Calories");
+                .attr("class", "label")
+                .attr("x", this.width)
+                .attr("y", -6)
+                .style("text-anchor", "end")
+                .text("Inequality");
 
         // y-axis
         this.svg
             .append("g")
-            .attr("class", "y axis")
-            .call(this.yAxis)
+                .attr("class", "y axis")
+                .call(this.yAxis)
             .append("text")
-            .attr("class", "label")
-            .attr("transform", "rotate(-90)")
-            .attr("y", 6)
-            .attr("dy", ".71em")
-            .style("text-anchor", "end")
-            .text("Protein (g)");
+                .attr("class", "label")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("GDP per Person");
 
         this.animateScatterPlot();
 
