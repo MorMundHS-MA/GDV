@@ -1,4 +1,4 @@
-import { easeLinear, line, Line } from "d3";
+import { easeLinear, line, Line, schemeCategory10 } from "d3";
 import { Axis, axisBottom, axisLeft, axisRight } from "d3-axis";
 import { scaleLinear, ScaleLinear } from "d3-scale";
 import { ICountry, StatLimits, StatValue, years } from "./DataSource";
@@ -14,6 +14,7 @@ export class LineChart {
     private readonly height: number;
 
     private data: CountryStats = new Map();
+    private colors: Map<ICountry, string>;
 
     private readonly ineqScale: ScaleLinear<number, number>;
     private readonly ineqAxis: Axis<{valueOf(): number; }>;
@@ -72,17 +73,25 @@ export class LineChart {
             .attr("class", "y axis")
             .attr("transform", "translate(" + this.width + ", 0)");
 
-        // Label
-        this.svg
+        // Static line legend (dotted vs normal)
+        this.svg.selectAll(".legend.lines")
+            .data(["━ ━ GDP", "━━━ Inequality"]).enter()
+            .append("g")
+            .attr("class", ".legend.lines")
+            .attr("transform", (d, i) => "translate(0," + i * 20 + ")")
             .append("text")
-            .attr("class", "country-label");
+                .attr("x", 20)
+                .attr("y", 9)
+                .attr("dy", ".35em")
+                .text((val) => val);
 
         this.setCountries(selectedCountries);
     }
 
     public setCountries(countries: CountryStats) {
         // Get changes in data
-        const newCountries = Array.from(countries.keys()).filter((country) => !this.data.has(country));
+        const countryNames = Array.from(countries.keys());
+        const newCountries = countryNames.filter((country) => !this.data.has(country));
         const removedCountries = Array.from(this.data.keys()).filter((country) => !countries.has(country));
 
         // Delete lines of removed countries
@@ -92,7 +101,8 @@ export class LineChart {
 
         this.data = countries;
         this.reScaleDomain();
-
+        this.colors = new Map(
+            countryNames.map<[ICountry, string]>((country, index) => [country, schemeCategory10[index % 10]]));
         // Update existing lines to match rescaled domain
         for (const country of this.data) {
             this.updateDottedLine(StatValue.gdp, country[0]);
@@ -105,8 +115,7 @@ export class LineChart {
             this.createDottedLine(StatValue.ineqComb, country);
         }
 
-        // Update label
-        this.svg.select(".country-label").text(Array.from(this.data.keys()).map((country) => country.name).join(", "));
+        this.updateCountryLegend();
     }
 
     private reScaleDomain() {
@@ -126,9 +135,11 @@ export class LineChart {
         this.gdpAxisElement.call(this.gdpAxis);
         this.ineqAxisElement.call(this.ineqAxis);
     }
+
     private updateDottedLine(statType: StatValue, country: ICountry) {
         this.svg.selectAll(`.dot.${statType}.${country.code}`)
             .data(this.data.get(country).get(statType))
+            .style("fill", this.colors.get(country))
             .transition()
             .duration(200)
                 .ease(easeLinear)
@@ -136,6 +147,7 @@ export class LineChart {
                     .attr("cy", this.getStatMapper(statType));
 
         this.svg.select(`.line.${statType}.${country.code}`)
+            .style("stroke", this.colors.get(country))
             .datum(this.data.get(country).get(statType))
             .transition()
                 .attr("d", this.getLine(statType));
@@ -145,6 +157,7 @@ export class LineChart {
         this.svg
             .append("path")
             .attr("class", `line ${statType} ${country.code}`)
+            .style("stroke", this.colors.get(country))
             .datum(this.data.get(country).get(statType))
             .attr("d", this.getLine(statType));
 
@@ -153,12 +166,35 @@ export class LineChart {
             .data(this.data.get(country).get(statType))
             .enter()
                 .append("circle")
+                .style("fill", this.colors.get(country))
                 .attr("class", `dot ${statType} ${country.code}`)
                 .attr("cx", (stats) => this.timeScale(Number.parseInt(stats.year)))
                 .attr("cy", this.getStatMapper(statType))
                 .attr("r", 5)
             .exit()
                 .remove();
+    }
+
+    private updateCountryLegend() {
+        const selection = this.svg.selectAll(".legend.countries").data(Array.from(this.data.keys()));
+        const legend = selection.enter()
+            .append("g")
+            .attr("class", "legend countries")
+            .attr("transform", (d, i) => "translate(0," + i * 20 + ")");
+        legend.append("text")
+            .attr("x", this.width - 20)
+            .attr("y", 9)
+            .attr("dy", ".35em")
+            .style("text-anchor", "end")
+            .text((country) => country.name);
+        legend.append("rect")
+            .attr("x", this.width - 18)
+            .attr("width", 18)
+            .attr("height", 18)
+            .style("fill", (country) => this.colors.get(country));
+
+        selection.select("text").text((country) => country.name);
+        selection.exit().remove();
     }
 
     private getLine(statType: StatValue): Line<IYearStats> {
