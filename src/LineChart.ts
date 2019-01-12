@@ -78,9 +78,9 @@ export class LineChart {
             .data(["━ ━ GDP", "━━━ Inequality"]).enter()
             .append("g")
             .attr("class", ".legend.lines")
-            .attr("transform", (d, i) => "translate(0," + i * 20 + ")")
             .append("text")
-                .attr("x", 20)
+                .attr("x", (val, i) => i === 1 ? 20 : this.width - 15)
+                .style("text-anchor", (val, i) => i === 1 ? "initial" : "end")
                 .attr("y", 9)
                 .attr("dy", ".35em")
                 .text((val) => val);
@@ -180,8 +180,9 @@ export class LineChart {
         const legend = selection.enter()
             .append("g")
             .attr("class", "legend countries")
-            .attr("transform", (d, i) => "translate(0," + i * 20 + ")");
+            .attr("transform", (d, i) => "translate(0," + (20 + i * 20) + ")");
         legend.append("text")
+            .attr("class", "legend-text-outlined")
             .attr("x", this.width - 24)
             .attr("y", 9)
             .attr("dy", ".35em")
