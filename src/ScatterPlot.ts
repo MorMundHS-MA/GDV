@@ -93,7 +93,10 @@ export class ScatterPlot {
             .data(this.color.domain())
             .enter().append("g")
             .attr("class", "legend")
-            .attr("transform", (d, i) => "translate(0," + i * 20 + ")");
+            .attr("transform", (d, i) => "translate(0," + i * 20 + ")")
+            .on("click", (region) => {
+                this.setSelection(this.data.getCountries().filter((country) => country.region === region));
+            });
 
         // draw legend colored rectangles
         legend.append("rect")

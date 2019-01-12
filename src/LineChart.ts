@@ -176,7 +176,11 @@ export class LineChart {
     }
 
     private updateCountryLegend() {
-        const selection = this.svg.selectAll(".legend.countries").data(Array.from(this.data.keys()));
+        const countryNames = Array.from(this.data.keys());
+        const selection = this.svg
+            .selectAll(".legend.countries")
+            .data(countryNames
+                .slice(0, Math.min(countryNames.length, (this.height - 40) / 20)));
         const legend = selection.enter()
             .append("g")
             .attr("class", "legend countries")
