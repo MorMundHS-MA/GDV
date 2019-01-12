@@ -1,4 +1,4 @@
-import { easeLinear, line, Line, schemeCategory10 } from "d3";
+import { easeLinear, format, line, Line, schemeCategory10 } from "d3";
 import { Axis, axisBottom, axisLeft, axisRight } from "d3-axis";
 import { scaleLinear, ScaleLinear } from "d3-scale";
 import { ICountry, StatLimits, StatValue, years } from "./DataSource";
@@ -44,7 +44,7 @@ export class LineChart {
         this.gdpScale = scaleLinear().range([this.height, 0]);
         this.gdpAxis = axisRight(this.gdpScale);
         this.timeScale = scaleLinear().range([0, this.width]);
-        this.timeAxis = axisBottom(this.timeScale);
+        this.timeAxis = axisBottom(this.timeScale).tickFormat(format("d"));
 
          // add the graph canvas to the body of the webpage
         this.svg = container.append("svg")
