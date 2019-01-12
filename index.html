@@ -52,26 +52,28 @@
 
 <body>
     <div class="row justify-content-center"  style="float: none; margin: 0 auto; margin-bottom: 1cm">
-        <h1 style="color : rgb(36, 36, 36);">Wächst die Wirtschaft während die Welt gerechter wird?</h1>
+        <h1>Wächst die Wirtschaft eines Landes während dieses gerechter wird?</h1>
     </div>
 
     <div class="row">
-        <div class="col">
-            <div class ="row justify-content-center">
-                <h4 style="color : rgb(36, 36, 36);">Übersicht der aktuellen Wirtschaftsstärke in Relation zur Ungleichheit </h4>
-                <a data-target="#myModal" data-toggle="modal" href="#myModal">Info</a>  
+        <div class ="row justify-content-center">
+            <div class ="col" style="float: none; margin: 0 auto; margin-left: 1cm;">                
+                <h4>Relation der Wirtschaftsstärke zur Ungleichheit 
+               <!-- <a data-target="#myModal" data-toggle="modal" href="#myModal"><p>Info</p></a>-->
+                <button type="button" class="btn btn-default btn-sm" data-target="#myModal" data-toggle="modal" href="#myModal">
+                    <span class="glyphicon glyphicon-info-sign"></span> Info
+                </button> 
+                </h4>               
+                
+                <div data-chart-height="700" data-chart-width="600" id="plot"></div>
             </div>
-            <div class ="row justify-content-center">
-                <div data-chart-height="700" data-chart-width="600" id="plot" style="display: inline;"></div>
-                <div  id="chart1" style="display: inline; vertical-align: center"></div>
+            <div class ="col">
+                <div  id="chart1" data-chart-height="350" data-chart-width="700"></div>
             </div>
         </div>
-        <div class="col"> 
-            <div class="row">
-                    <div data-chart-height="500" data-chart-width="960" id="charts"></div>
-            </div>
-            <div class="row" style="background-color:orange;">
-                .col
+        <div class="row justify-content-center" >
+            <div class="col-xs-1" align="center">
+                    <div data-chart-height="500" data-chart-width="960" id="charts" ></div>
             </div>
         </div>
     </div> 
@@ -97,13 +99,12 @@
             </div>          
             <!-- Modal footer -->
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal" id="modalCloseBtn">Close</button>
             </div> 
           </div>
         </div>
       </div>  
     </div>
-
 </body>
 <script src="dist/bundle.js"></script>
 </html>
