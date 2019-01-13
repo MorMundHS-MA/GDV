@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import { Axis, BaseType, easeQuad, ScaleLinear, ScaleLogarithmic } from "d3";
-import { DataSource, ICountry, years } from "./DataSource";
+import { DataSource, ICountry, ICountryStats, years } from "./DataSource";
 
 export class ScatterPlot {
     private readonly svg: d3.Selection<SVGGElement, {}, HTMLElement, any>;
@@ -20,7 +20,8 @@ export class ScatterPlot {
     private readonly yAxis: Axis<{valueOf(): number; }>;
     private readonly xScale: ScaleLinear<number, number>;
     private readonly xAxis: Axis<{valueOf(): number; }>;
-    private readonly color = d3.scaleOrdinal(d3.schemeCategory10);
+    private readonly color = d3.scaleOrdinal(d3.schemeCategory10)
+        .domain(["Africa", "Americas" , "Asia", "Europe", "Oceania"]);
     private readonly unselectedOpacity = 0.3;
     // event subscribers
     private onSelectChange: Array<(countrySelection: ICountry[]) => void> = [];
@@ -155,11 +156,13 @@ export class ScatterPlot {
     * axis - sets up axis
     */
     // setup x
-    private readonly xValue = (country: ICountry) => country.stats.get(this.displayedYear).inequality.combined;
+    private readonly xValue = (country: ICountry) =>
+        this.interpolateData(country, this.displayedYear, (stat) => stat.inequality.combined)
     private readonly xMap = (country: ICountry) => this.xScale(this.xValue(country));
 
     // setup y
-    private readonly yValue = (country: ICountry) => country.stats.get(this.displayedYear).gdp;
+    private readonly yValue = (country: ICountry) =>
+        this.interpolateData(country, this.displayedYear, (stat) => stat.gdp)
     private readonly yMap = (country: ICountry) => this.yScale(this.yValue(country));
 
     // setup fill color
@@ -167,8 +170,9 @@ export class ScatterPlot {
 
     private updateScatterPlot(data: ICountry[]) {
         data = data.filter((country) => {
-            const stats = country.stats.get(this.displayedYear);
-            return Number.isFinite(stats.gdp) && Number.isFinite(stats.inequality.combined);
+            const gdp = this.interpolateData(country, this.displayedYear, (stat) => stat.gdp);
+            const ineq = this.interpolateData(country, this.displayedYear, (stat) => stat.inequality.combined);
+            return Number.isFinite(gdp) && Number.isFinite(ineq);
         });
 
         const graph = this.svg.selectAll(".dot")
@@ -184,42 +188,42 @@ export class ScatterPlot {
 
     private addDots(selection: d3.Selection<SVGCircleElement | BaseType, ICountry, SVGGElement, {}>) {
         selection
-        .attr("cx", this.xMap)
-        .attr("cy", this.yMap)
-        .attr("class", "dot")
-        .attr("r", 4.5)
-        .style("fill", (country) => this.color(this.cValue(country)))
-        .style("opacity", (country) => {
-            if (this.selection.has(country) || this.selection.size === 0) {
-                // Item is selected or there is not selection
-                return 1;
-            } else {
-                return this.unselectedOpacity;
-            }
-        })
-        .on("mouseover", (country) => {
-            this.tooltip.transition()
-                .duration(200)
-                .style("opacity", .9);
-            this.tooltip.html(country.name + "<br/> (" + this.xValue(country)
-                + ", " + d3.format(".3~s")(this.yValue(country)) + " USD)")
-                .style("left", (this.xMap(country) + 55) + "px")
-                .style("top", this.yMap(country) + "px");
-        })
-        .on("mouseout", () => {
-            this.tooltip.transition()
-                .duration(500)
-                .style("opacity", 0);
-        })
-        .on("click", (country) => {
-            if (this.selection.has(country)) {
-                this.selection.delete(country);
-            } else {
-                this.selection.add(country);
-            }
+            .attr("cx", this.xMap)
+            .attr("cy", this.yMap)
+            .attr("class", "dot")
+            .attr("r", 4.5)
+            .style("fill", (country) => this.color(this.cValue(country)))
+            .style("opacity", (country) => {
+                if (this.selection.has(country) || this.selection.size === 0) {
+                    // Item is selected or there is not selection
+                    return 1;
+                } else {
+                    return this.unselectedOpacity;
+                }
+            })
+            .on("mouseover", (country) => {
+                this.tooltip.transition()
+                    .duration(200)
+                    .style("opacity", .9);
+                this.tooltip.html(country.name + "<br/> (" + this.xValue(country)
+                    + ", " + d3.format(".3~s")(this.yValue(country)) + " USD)")
+                    .style("left", (this.xMap(country) + 55) + "px")
+                    .style("top", this.yMap(country) + "px");
+            })
+            .on("mouseout", () => {
+                this.tooltip.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            })
+            .on("click", (country) => {
+                if (this.selection.has(country)) {
+                    this.selection.delete(country);
+                } else {
+                    this.selection.add(country);
+                }
 
-            this.updateOpacityForSelection();
-        });
+                this.updateOpacityForSelection();
+            });
     }
 
     private updateDots(selection: d3.Selection<SVGCircleElement | BaseType, ICountry, SVGGElement, {}>) {
@@ -242,5 +246,55 @@ export class ScatterPlot {
                 return this.unselectedOpacity;
             }
         });
+    }
+
+    private interpolateData(country: ICountry, year: string, accessor: (stats: ICountryStats) => number): number {
+        const selectedValue = accessor(country.stats.get(year));
+        if (Number.isFinite(selectedValue)) {
+            return selectedValue;
+        }
+        const selectedYear = years.indexOf(year);
+
+        if (selectedYear === 0 || selectedValue === years.length - 1) {
+            return Number.NaN;
+        }
+
+        const startYear = Math.max(0, years.indexOf(year) - 2);
+        const endYear = Math.min(years.length - 1, years.indexOf(year) + 2);
+
+        let lowerVal = Number.NaN;
+        let lowerIndex = 0;
+        let higherVal = Number.NaN;
+        let higherIndex = 0;
+        for (let index = startYear; index < selectedYear; index++) {
+            const val = accessor(country.stats.get(years[index]));
+            if (Number.isFinite(val)) {
+                lowerVal = val;
+                lowerIndex = index;
+            }
+        }
+
+        for (let index = selectedYear + 1; index <= endYear; index++) {
+            const val = accessor(country.stats.get(years[index]));
+            if (Number.isFinite(val)) {
+                higherVal = val;
+                higherIndex = index;
+                break;
+            }
+        }
+
+        if (country.name ===  "Russia") {
+            console.log("");
+        }
+
+        if (!Number.isFinite(lowerVal) || !Number.isFinite(higherVal)) {
+            return Number.NaN;
+        }
+
+        const indexDistance = higherIndex - lowerIndex;
+        const valueDistance = higherVal - lowerVal;
+        const relativeIndex = selectedYear - lowerIndex;
+
+        return lowerVal + ((relativeIndex / indexDistance) * valueDistance);
     }
 }
