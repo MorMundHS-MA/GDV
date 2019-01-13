@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import { Axis, BaseType, easeQuad, ScaleLinear, ScaleLogarithmic } from "d3";
-import { DataSource, ICountry, years } from "./DataSource";
+import { DataSource, ICountry, ICountryStats, years } from "./DataSource";
 
 export class ScatterPlot {
     private readonly svg: d3.Selection<SVGGElement, {}, HTMLElement, any>;
@@ -155,11 +155,13 @@ export class ScatterPlot {
     * axis - sets up axis
     */
     // setup x
-    private readonly xValue = (country: ICountry) => country.stats.get(this.displayedYear).inequality.combined;
+    private readonly xValue = (country: ICountry) =>
+        this.interpolateData(country, this.displayedYear, (stat) => stat.inequality.combined)
     private readonly xMap = (country: ICountry) => this.xScale(this.xValue(country));
 
     // setup y
-    private readonly yValue = (country: ICountry) => country.stats.get(this.displayedYear).gdp;
+    private readonly yValue = (country: ICountry) =>
+        this.interpolateData(country, this.displayedYear, (stat) => stat.gdp)
     private readonly yMap = (country: ICountry) => this.yScale(this.yValue(country));
 
     // setup fill color
@@ -167,8 +169,9 @@ export class ScatterPlot {
 
     private updateScatterPlot(data: ICountry[]) {
         data = data.filter((country) => {
-            const stats = country.stats.get(this.displayedYear);
-            return Number.isFinite(stats.gdp) && Number.isFinite(stats.inequality.combined);
+            const gdp = this.interpolateData(country, this.displayedYear, (stat) => stat.gdp);
+            const ineq = this.interpolateData(country, this.displayedYear, (stat) => stat.inequality.combined);
+            return Number.isFinite(gdp) && Number.isFinite(ineq);
         });
 
         const graph = this.svg.selectAll(".dot")
@@ -242,5 +245,55 @@ export class ScatterPlot {
                 return this.unselectedOpacity;
             }
         });
+    }
+
+    private interpolateData(country: ICountry, year: string, accessor: (stats: ICountryStats) => number): number {
+        const selectedValue = accessor(country.stats.get(year));
+        if (Number.isFinite(selectedValue)) {
+            return selectedValue;
+        }
+        const selectedYear = years.indexOf(year);
+
+        if (selectedYear === 0 || selectedValue === years.length - 1) {
+            return Number.NaN;
+        }
+
+        const startYear = Math.max(0, years.indexOf(year) - 2);
+        const endYear = Math.min(years.length - 1, years.indexOf(year) + 2);
+
+        let lowerVal = Number.NaN;
+        let lowerIndex = 0;
+        let higherVal = Number.NaN;
+        let higherIndex = 0;
+        for (let index = startYear; index < selectedYear; index++) {
+            const val = accessor(country.stats.get(years[index]));
+            if (Number.isFinite(val)) {
+                lowerVal = val;
+                lowerIndex = index;
+            }
+        }
+
+        for (let index = selectedYear + 1; index <= endYear; index++) {
+            const val = accessor(country.stats.get(years[index]));
+            if (Number.isFinite(val)) {
+                higherVal = val;
+                higherIndex = index;
+                break;
+            }
+        }
+
+        if (country.name ===  "Russia") {
+            console.log("");
+        }
+
+        if (!Number.isFinite(lowerVal) || !Number.isFinite(higherVal)) {
+            return Number.NaN;
+        }
+
+        const indexDistance = higherIndex - lowerIndex;
+        const valueDistance = higherVal - lowerVal;
+        const relativeIndex = selectedYear - lowerIndex;
+
+        return lowerVal + ((relativeIndex / indexDistance) * valueDistance);
     }
 }
