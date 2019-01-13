@@ -166,8 +166,13 @@ export class ScatterPlot {
     private readonly cValue = (country: ICountry) => country.region;
 
     private updateScatterPlot(data: ICountry[]) {
+        data = data.filter((country) => {
+            const stats = country.stats.get(this.displayedYear);
+            return Number.isFinite(stats.gdp) && Number.isFinite(stats.inequality.combined);
+        });
+
         const graph = this.svg.selectAll(".dot")
-            .data(data);
+            .data(data, (country: ICountry) => country.code);
         // Update
         this.updateDots(graph);
 
