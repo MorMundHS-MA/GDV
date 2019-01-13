@@ -237,7 +237,13 @@ export class ScatterPlot {
 
     private updateOpacityForSelection() {
         this.onSelectChange.forEach((h) => h(Array.from(this.selection)));
-        this.svg.selectAll(".dot").data(this.data.getCountries())
+        const data = this.data.getCountries().filter((country) => {
+            const gdp = this.interpolateData(country, this.displayedYear, (stat) => stat.gdp);
+            const ineq = this.interpolateData(country, this.displayedYear, (stat) => stat.inequality.combined);
+            return Number.isFinite(gdp) && Number.isFinite(ineq);
+        });
+
+        this.svg.selectAll(".dot").data(data, (country: ICountry) => country.code)
         .style("opacity", (c) => {
             if (this.selection.has(c) || this.selection.size === 0) {
                 // Item is selected or there is not selection
