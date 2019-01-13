@@ -41,9 +41,18 @@ DataSource.loadData().then((data) => {
     createChart(data.getCountries());
 }).catch((err) => console.error(err));
 
-select("#Nummer01").on("click", () => {
-   plot.setSelectionByName(["Germany", "France"]);
+select("#showChile").on("click", () => {
+   plot.setSelectionByName(["Chile"]);
 });
+select("#showAfricola").on("click", () => {
+    plot.setSelectionByName(["Central African Republic"]);
+ });
+select("#showBulgaria").on("click", () => {
+    plot.setSelectionByName(["Bulgaria"]);
+ });
+select("#showAngola").on("click", () => {
+    plot.setSelectionByName(["Angola"]);
+ });
 
 select("#animation-control").on("click", () => {
     const isRunning = anim !== undefined;
