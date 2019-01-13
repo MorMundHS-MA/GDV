@@ -20,7 +20,8 @@ export class ScatterPlot {
     private readonly yAxis: Axis<{valueOf(): number; }>;
     private readonly xScale: ScaleLinear<number, number>;
     private readonly xAxis: Axis<{valueOf(): number; }>;
-    private readonly color = d3.scaleOrdinal(d3.schemeCategory10);
+    private readonly color = d3.scaleOrdinal(d3.schemeCategory10)
+        .domain(["Africa", "Americas" , "Asia", "Europe", "Oceania"]);
     private readonly unselectedOpacity = 0.3;
     // event subscribers
     private onSelectChange: Array<(countrySelection: ICountry[]) => void> = [];
@@ -187,42 +188,42 @@ export class ScatterPlot {
 
     private addDots(selection: d3.Selection<SVGCircleElement | BaseType, ICountry, SVGGElement, {}>) {
         selection
-        .attr("cx", this.xMap)
-        .attr("cy", this.yMap)
-        .attr("class", "dot")
-        .attr("r", 4.5)
-        .style("fill", (country) => this.color(this.cValue(country)))
-        .style("opacity", (country) => {
-            if (this.selection.has(country) || this.selection.size === 0) {
-                // Item is selected or there is not selection
-                return 1;
-            } else {
-                return this.unselectedOpacity;
-            }
-        })
-        .on("mouseover", (country) => {
-            this.tooltip.transition()
-                .duration(200)
-                .style("opacity", .9);
-            this.tooltip.html(country.name + "<br/> (" + this.xValue(country)
-                + ", " + d3.format(".3~s")(this.yValue(country)) + " USD)")
-                .style("left", (this.xMap(country) + 55) + "px")
-                .style("top", this.yMap(country) + "px");
-        })
-        .on("mouseout", () => {
-            this.tooltip.transition()
-                .duration(500)
-                .style("opacity", 0);
-        })
-        .on("click", (country) => {
-            if (this.selection.has(country)) {
-                this.selection.delete(country);
-            } else {
-                this.selection.add(country);
-            }
+            .attr("cx", this.xMap)
+            .attr("cy", this.yMap)
+            .attr("class", "dot")
+            .attr("r", 4.5)
+            .style("fill", (country) => this.color(this.cValue(country)))
+            .style("opacity", (country) => {
+                if (this.selection.has(country) || this.selection.size === 0) {
+                    // Item is selected or there is not selection
+                    return 1;
+                } else {
+                    return this.unselectedOpacity;
+                }
+            })
+            .on("mouseover", (country) => {
+                this.tooltip.transition()
+                    .duration(200)
+                    .style("opacity", .9);
+                this.tooltip.html(country.name + "<br/> (" + this.xValue(country)
+                    + ", " + d3.format(".3~s")(this.yValue(country)) + " USD)")
+                    .style("left", (this.xMap(country) + 55) + "px")
+                    .style("top", this.yMap(country) + "px");
+            })
+            .on("mouseout", () => {
+                this.tooltip.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            })
+            .on("click", (country) => {
+                if (this.selection.has(country)) {
+                    this.selection.delete(country);
+                } else {
+                    this.selection.add(country);
+                }
 
-            this.updateOpacityForSelection();
-        });
+                this.updateOpacityForSelection();
+            });
     }
 
     private updateDots(selection: d3.Selection<SVGCircleElement | BaseType, ICountry, SVGGElement, {}>) {
