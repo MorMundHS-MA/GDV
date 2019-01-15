@@ -10,7 +10,7 @@
      <style>
         body {
             font: 11px sans-serif;
-            background: #FAFAFA
+            background: #376092
         }
         .axis path,
         .axis line {
@@ -57,26 +57,60 @@
         .year.label {
             font-size: larger;
         }
+        h1{
+            color: white
+        }
+        p {
+            font-size: larger;
+            color: white
+        }
+
+        svg{
+            background-color: white;
+        }
+        h4{
+            color: white;
+        }
+        .modal_p{
+            color: black;
+        }
     </style>
 </head>
 
-<body>
+<body>  
     <div class="row justify-content-center"  style="float: none; margin: 0 auto; margin-bottom: 1cm; margin-top: 0.5cm;">
-        <h1>Can the inequality in this world sink while the economy rises?</h1>
+        <h1>Korrelation zwischen der Ungleichheit und der wirtschaftlichen Entwicklung</h1>
+    </div>
+    <div class="row justify-content-center"  style="float: none; margin: 0 auto; margin-bottom: 1cm; margin-top: 0.5cm;">
+        <div class="col" style="margin-left:5cm">
+            <p style="font-size: 15px">
+                "Die Wirtschaft wächst und wächst, aber der Spalt zwischen Arm und Reich wird nicht kleiner. Was läuft da schief?"1 – So titelt DIE ZEIT Anfang 2018. Doch ist das wirklich so? Wird die Welt sogar ungerechter, obwohl es immer mehr Ländern wirtschaftlich immer besser geht? Menschenwürdige Arbeit und Wirtschafts-wachstum sowie Verringerung der Ungleichheit sind ebenfalls zwei der sogenannten Sustainable Devolopment Goals der Vereinten Nationen – Ziele zur nachhaltigen Entwicklung der Welt auf wirtschaftlicher, sozialer und ökologischer Ebene.
+                Um eine mögliche Korrelation zwischen den beiden Aspekten zu beleuchten wurden in diesem Projekt länderübergreifend zwei Größen gegenübergestellt: Das BIP pro Kopf eines Landes, sowie der Coefficent for Human Inequality, eine Kennzahl der Ungleichheit in Gesundheit, Bildung und Einkommen in einer Bevölkerung. Was lässt sich konkret erkennen?
+                Führt eine wachsende Wirtschaft automatisch zu mehr Gerechtigkeit in einer Bevölkerung?
+            </p>>
+        </div>
+        <div class="col">
+            <img src="index.jpg" alt="Italian Trulli" width="600">
+          </div>
+            
+    </div>
+    <div class="row justify-content-center"  style="float: none; margin: 0 auto; margin-left: 7cm; margin-right: 7cm;">
+        
     </div>
 
     <div class ="row">
         <div class ="col" style="float: none; margin: 0 auto; margin-left: 1cm;">
-            <h4>Economical power in relation to human inequality
-            <!-- <a data-target="#myModal" data-toggle="modal" href="#myModal"><p>Info</p></a>-->
-            <button type="button" class="btn btn-default btn-sm" data-target="#myModal" data-toggle="modal" href="#myModal">
-                <span class="glyphicon glyphicon-info-sign"></span> Info
-            </button>
-            </h4>
+
         </div>
     </div>
-    <div class="row justify-content-center">
+    <div class="row justify-content-center" style="margin-top: 1cm">
         <div class="col-4">
+            <h4  align="center">Economical power in relation to human inequality
+            <!-- <a data-target="#myModal" data-toggle="modal" href="#myModal"><p>Info</p></a>-->
+                <button type="button" class="btn btn-default btn-sm" data-target="#myModal" data-toggle="modal" href="#myModal">
+                    <span class="glyphicon glyphicon-info-sign"></span> Info
+                </button>
+            </h4>
             <button id="animation-control" class="plot-control">Start Animation</button>
             <button id="reset-selection" class="plot-control d-none">Reset selection</button>
             <div data-chart-height="600" data-chart-width="600" id="plot"></div>
@@ -86,8 +120,11 @@
             <div id="chart1" data-chart-height="500" data-chart-width="750"></div>
         </div>
     </div>
-    <div class="row justify-content-center" >
+    <div class="row justify-content-center" style="margin-top: 3.5cm">
         <div class="col-xs-1" align="center">
+            <h4>
+                Übersicht über alle Länder
+            </h4>
             <div data-chart-height="500" data-chart-width="500" id="charts" ></div>
         </div>
     </div>
@@ -98,33 +135,39 @@
             <div class="modal-content">
                 <!-- Modal Header -->
                 <div class="modal-header">
-                <h4 class="modal-title">Economical power in relation to human inequality index</h4>
+                <h4 class="modal-title" style="color:black;">Economical power in relation to human inequality index</h4>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
                 <!-- Modal body -->
                 <div class="modal-body">
                     <h5>Scatter Plot:</h5>
-                    <p>
+                    <p class="modal_p">
                         The scatter plot shows the economic power of each country in the world in relation to its inequality Index. The dot's color is an indicator for the continent the country is from. You can click on one or multiple points to see the change of the given data over the last 9 years and compare it to another country.
                     </p>
                     <h5>Insights:</h5>
 
-                    <p>
+                    <p class="modal_p">
                         While analyzing the data we saw a some common occurrences that are summarized below. Please feel free to click on the indicated Link to visualize the suggested data.
                     </p>
                     <ul>
                         <li>
+                            <p class="modal_p">
                             Often we see an improvement of inequality with an economic growth together.
                             This is a very common case and you can look for example at <a id="showChile" href="#">Chile</a> to see that.
                             Feel free to add more countries to compare these values.
+                            </p>
                         </li>
                         <li>
+                            <p class="modal_p">
                             A decreasing economic power often correlates with an increasing human inequality 
                             index like in the <a id="showAfricola" href="#">Central African Republic</a>
+                            </p>
                         </li>
                         <li>
+                            <p class ="modal_p">
                             Although there are also some exceptions like
                             <a id="showBulgaria" href="#">Bulgaria</a> and<a id="showAngola" href="#">Angola</a>
+                            </p>
                         </li>
                     </ul>
                 </div>
